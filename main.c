@@ -20,7 +20,8 @@
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 
-int servoId=0;
+int servoId1=0;
+int servoId2=1;
 int oldV=300;
 int inputV=0;
 int currentSpeed=0;
@@ -37,10 +38,13 @@ int main(void)
 
 	
 	//set to wheel mode
-	dxl_write_word(servoId, CW_ANGLE_LIMIT_L, 0);
-	dxl_write_word(servoId, CCW_ANGLE_LIMIT_L, 0 );
-	dxl_write_word(servoId, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
 	
+		dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
+		dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
+		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
 	
 	printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
 	scanf("%d",&inputV);
@@ -77,7 +81,11 @@ int main(void)
 		currentSpeed=currentSpeed>1023 ? 1023 : currentSpeed;
 
 		
-		dxl_write_word(servoId, MOVING_SPEED_L, currentSpeed );
+		dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
+		dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
+		
+		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
+		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
 		//currentSpeed= dxl_read_word( servoId, PRESENT_SPEED_L);
 		printf("current speed: %d\r\n", currentSpeed);
 			
