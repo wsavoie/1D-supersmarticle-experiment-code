@@ -36,18 +36,25 @@ int main(void)
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
     
 
+		srand(time(NULL));
 	
 	//set to wheel mode
 	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId1, MAX_TORQUE_L, 1023);
+	dxl_write_word(servoId1, TORQUE_LIMIT_L, 1023);
 	
-		dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
-		dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
-		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId2, MAX_TORQUE_L, 1023);
+	dxl_write_word(servoId2, TORQUE_LIMIT_L, 1023);
+	
+	
 	
 	printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
-	scanf("%d",&inputV);
+	//scanf("%d",&inputV);
 	//if(oldV!=inputV)
 	//{
 		////sanitize inputs
