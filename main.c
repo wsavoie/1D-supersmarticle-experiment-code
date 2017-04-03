@@ -7,25 +7,34 @@
 #define __DELAY_BACKWARD_COMPATIBLE__
 
 #include <stdio.h>
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#define F_CPU 8000000UL
 
 #include <math.h>
 #include "dynamixel.h"
 #include "serial.h"
 #include "AX12A.h"
-
+#include <util/delay.h>
+#include <avr/interrupt.h>
 
 
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
-
+int keepWithinBounds(int input);
 int servoId1=0;
 int servoId2=1;
 int oldV=300;
 int inputV=0;
 int currentSpeed=0;
-
+int timer=0;
+int randSpeedChange = .2*1024; //change by 10%
+int delayTime = 200; 
+int cs1=0;
+int cs2=0;
+int timerSwitch=9;
 int main(void)
 {
 
@@ -35,7 +44,6 @@ int main(void)
 	
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
     
-
 		srand(time(NULL));
 	
 	//set to wheel mode
@@ -67,39 +75,63 @@ int main(void)
 	
 
 	
-	
-	
+		currentSpeed=1023;
+	printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
     while (1) 
     {
+		currentSpeed=1023;
+		//unsigned char ReceivedData = getchar();
+		//if(ReceivedData ==  'w')
+			//currentSpeed=currentSpeed+10;
+		//else if(ReceivedData == 's')
+			//currentSpeed=currentSpeed-10;
+		//else if(ReceivedData == 0x1b) //esc
+			//currentSpeed=0;
+		//else if(ReceivedData == 'q') 
+			//currentSpeed=512;
+		//else if(ReceivedData == 'e') 
+			//currentSpeed=1023;
+		//else
+			//currentSpeed=currentSpeed;
+		timer++;
+		if (timer>timerSwitch)
+		{
+			cs1=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
+			cs2=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
+			timer=0;
+			
+					cs1=keepWithinBounds(cs1);
+					cs2=keepWithinBounds(cs2);
+					
+			printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
+		}
+		else
+		{
+			cs1=currentSpeed;
+			cs2=currentSpeed;
+		}
+		cs1=keepWithinBounds(cs1);
+		cs2=keepWithinBounds(cs2);
 		
-		unsigned char ReceivedData = getchar();
-		if(ReceivedData ==  'w')
-			currentSpeed=currentSpeed+10;
-		else if(ReceivedData == 's')
-			currentSpeed=currentSpeed-10;
-		else if(ReceivedData == 0x1b) //esc
-			currentSpeed=0;
-		else if(ReceivedData == 'q') 
-			currentSpeed=512;
-		else if(ReceivedData == 'e') 
-			currentSpeed=1023;
-		//sanitize inputs
-		currentSpeed=currentSpeed<0 ? 0:currentSpeed;
-		currentSpeed=currentSpeed>1023 ? 1023 : currentSpeed;
+		
+		dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
+		dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+		//printf("current speed: S1=%d\t S2=%d\n", cs1,cs2);
+
+
+		_delay_ms(delayTime);
 
 		
-		dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
-		dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
-		
-		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
-		dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
-		//currentSpeed= dxl_read_word( servoId, PRESENT_SPEED_L);
-		printf("current speed: %d\r\n", currentSpeed);
-			
     }
-	return 0;
+	return 1;
 }
 
+int keepWithinBounds(int input)
+{
+		input=input<0 ? 0:input;
+		input=input>1023 ? 1023 : input;
+		return input;
+}
 // Print communication result
 void PrintCommStatus(int CommStatus)
 {
