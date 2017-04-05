@@ -24,6 +24,7 @@
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 int keepWithinBounds(int input);
+int increaseSpeed(int speedIn, int increaseAmount);
 int servoId1=0;
 int servoId2=1;
 int oldV=300;
@@ -132,7 +133,11 @@ int main(void)
     }
 	return 1;
 }
-
+int increaseSpeed(int speedIn,int increaseAmount=10)
+{
+	speed=
+return speed;
+}
 int keepWithinBounds(int input)
 {
 		input=input<0 ? 0:input;
