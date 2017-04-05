@@ -22,24 +22,32 @@
 #include "AX12A.h"
 
 
-
-int changeSpeed(int speedIn,int changeAmount);
-int changeSpeedPercent(int speedIn,int changeAmount);
-int keepWithinBounds(int input,int minB, int maxB);
-int keyboardInput(int speed);
-
-void PrintCommStatus(int CommStatus);
-void PrintErrorCode(void);
-
 int servoId1=0;
 int servoId2=1;
 int currentSpeed=0; //0-1023 = ccw direction 1024-2047= cw;
 int timer=0;
-int randSpeedChange = 0.2*1023; //change by 10%    
-int delayTime = 200; 
+float percentChange=.10;
+int randSpeedChange = 2*percentChange*1023; //multiply by 2 to allow positive and negative change by percent change value
+int delayTime = 200;
 int cs1=0;
 int cs2=0;
 int timerSwitch=9;
+
+//wheel mode functions
+void setWheelModeAddresses();
+int changeSpeed(int speedIn,int changeAmount,int id);
+int changeSpeedPercent(int speedIn,int changeAmount,int id);
+int keepWithinBounds(int input,int minB, int maxB);
+int keyboardInput(int speed);
+
+//joint mode functions
+void setWheelModeAddresses();
+
+
+void PrintCommStatus(int CommStatus);
+void PrintErrorCode(void);
+
+
 int main(void)
 {
 
@@ -48,27 +56,7 @@ int main(void)
 	sei();	// Interrupt Enable
 	
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
-    
-		srand(time(NULL));
-		currentSpeed=950;
-		cs1=currentSpeed; cs2=currentSpeed;
-		
-	//set to wheel mode
-	dxl_write_word(servoId1, ID,servoId1);
-	dxl_write_word(servoId1, BAUDRATE,1);
-	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
-	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
-	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
-	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
-	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
-	
-	dxl_write_word(servoId2, ID, servoId2);
-	dxl_write_word(servoId2, BAUDRATE,1);
-	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
-	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
-	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
-	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
-	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
+	srand(time(NULL));
 	
 	
 	
@@ -95,16 +83,14 @@ int main(void)
 			
 			////for regular update//////
 			//currentSpeed=MAX;
-			
 			//cs1=currentSpeed; cs2=currentSpeed;
+			//dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
+			//dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+
 		//}
 			
-		
-		cs1=keepWithinBounds(cs1,0,MAX);
-		cs2=keepWithinBounds(cs2,0,MAX);
-		
-		dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
-		dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+			
+			
 		//printf("current speed: S1=%d\t S2=%d\n", cs1,cs2);
 
 
@@ -115,16 +101,69 @@ int main(void)
 	return 1;
 }
 
-//change speed by 10 bit amount
-int changeSpeed(int speedIn,int changeAmount)
+//initialize wheel mode system addresses
+void setWheelModeAddresses()
 {
-return speedIn+changeAmount;
+	currentSpeed=1023;
+	cs1=currentSpeed; cs2=currentSpeed;
+	
+	//set to wheel mode
+	dxl_write_word(servoId1, ID,servoId1);
+	dxl_write_word(servoId1, BAUDRATE,1);
+	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
+	
+	dxl_write_word(servoId2, ID, servoId2);
+	dxl_write_word(servoId2, BAUDRATE,1);
+	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
+}
+
+void setJointModeAddresses()
+{
+	currentSpeed=1023;
+	cs1=currentSpeed; cs2=currentSpeed;
+	
+	//set to wheel mode
+	dxl_write_word(servoId1, ID,servoId1);
+	dxl_write_word(servoId1, BAUDRATE,1);
+	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
+	
+	dxl_write_word(servoId2, ID, servoId2);
+	dxl_write_word(servoId2, BAUDRATE,1);
+	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
+	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
+	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
+}
+
+//change speed by 10 bit amount
+int changeSpeed(int speedIn,int changeAmount, int id)
+{
+	int speed=speedIn+changeAmount;
+	speed=keepWithinBounds(speed,0,MAX);
+	dxl_write_word(id, MOVING_SPEED_L, speed );
+	return speed;
 }
 
 //change speed by percent amount
-int changeSpeedPercent(int speedIn,int changeAmount)
+int changeSpeedPercent(int speedIn,int changeAmount,int id)
 {
-	return speedIn+changeAmount*MAX;
+	int speed = speedIn+changeAmount*MAX/100;
+	speed=keepWithinBounds(speed,0,MAX);
+	dxl_write_word(id, MOVING_SPEED_L, speed );
+	return speed;
 }
 
 //sanitize input value
@@ -142,19 +181,27 @@ int keyboardInput(int speed)
 	switch(ReceivedData)
 	{
 	case 'w':
-		speed=changeSpeedPercent(speed,5);
+		speed=changeSpeedPercent(speed,5,servoId1);
+		changeSpeedPercent(speed,5,servoId2);
 		break;	
 	case 's':
-		speed=changeSpeedPercent(speed,-5);
+		speed=changeSpeedPercent(speed,-5,servoId1);
+		changeSpeedPercent(speed,-5,servoId2);
 		break;
 	case 0x1b: //esc
 		speed=0;
+		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
+		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
 	case 'q':
 		speed=MAX/2;
+		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
+		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
 	case 'e':
 		speed=MAX;
+		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
+		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
 	default:
 		speed=speed;
