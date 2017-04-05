@@ -28,9 +28,9 @@ int servoId1=0;
 int servoId2=1;
 int oldV=300;
 int inputV=0;
-int currentSpeed=0;
+int currentSpeed=0; //0-1023 = ccw direction 1024-2047= cw;
 int timer=0;
-int randSpeedChange = .2*1024; //change by 10%
+int randSpeedChange = 0.2*1023; //change by 10%    
 int delayTime = 200; 
 int cs1=0;
 int cs2=0;
@@ -45,14 +45,19 @@ int main(void)
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
     
 		srand(time(NULL));
-	
+		currentSpeed=950;
+		
 	//set to wheel mode
+	dxl_write_word(servoId1, ID,servoId1);
+	dxl_write_word(servoId1, BAUDRATE,1);
 	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId1, MAX_TORQUE_L, 1023);
 	dxl_write_word(servoId1, TORQUE_LIMIT_L, 1023);
 	
+	dxl_write_word(servoId2, ID, servoId2);
+	dxl_write_word(servoId2, BAUDRATE,1);
 	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
@@ -75,11 +80,10 @@ int main(void)
 	
 
 	
-		currentSpeed=1023;
+	
 	printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
     while (1) 
     {
-		currentSpeed=1023;
 		//unsigned char ReceivedData = getchar();
 		//if(ReceivedData ==  'w')
 			//currentSpeed=currentSpeed+10;
@@ -93,23 +97,26 @@ int main(void)
 			//currentSpeed=1023;
 		//else
 			//currentSpeed=currentSpeed;
-		timer++;
-		if (timer>timerSwitch)
-		{
-			cs1=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
-			cs2=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
-			timer=0;
-			
-					cs1=keepWithinBounds(cs1);
-					cs2=keepWithinBounds(cs2);
-					
-			printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
-		}
-		else
-		{
+		
+		//////////////////////////////////////////
+		//timer++;
+		//if (timer>timerSwitch)
+		//{
+			//cs1=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
+			//cs2=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
+			//timer=0;
+			//
+					//cs1=keepWithinBounds(cs1);
+					//cs2=keepWithinBounds(cs2);
+					//
+			//printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
+		//}
+		//else
+		//{
+			//////////////////////////////////////////////////////
 			cs1=currentSpeed;
 			cs2=currentSpeed;
-		}
+		//}
 		cs1=keepWithinBounds(cs1);
 		cs2=keepWithinBounds(cs2);
 		
