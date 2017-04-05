@@ -124,17 +124,55 @@ int main(void)
     }
 	return 1;
 }
-int increaseSpeed(int speedIn,int increaseAmount=10)
+
+//change speed by 10 bit amount
+int changeSpeed(int speedIn,int changeAmount)
 {
-	speed=
-return speed;
+return speedIn+changeAmount;
 }
-int keepWithinBounds(int input)
+
+//change speed by percent amount
+int changeSpeedPercent(int speedIn,int changeAmount)
 {
-		input=input<0 ? 0:input;
-		input=input>1023 ? 1023 : input;
+	return speedIn+changeAmount*MAX;
+}
+
+//sanitize input value
+int keepWithinBounds(int input,int minB,int maxB)
+{
+		input=input<minB ? minB:input;
+		input=input>maxB ? maxB : input;
 		return input;
 }
+
+//change speed with keyboard input
+int keyboardInput(int speed)
+{
+	unsigned char ReceivedData = getchar();
+	switch(ReceivedData)
+	{
+	case 'w':
+		speed=changeSpeedPercent(speed,5);
+		break;	
+	case 's':
+		speed=changeSpeedPercent(speed,-5);
+		break;
+	case 0x1b: //esc
+		speed=0;
+		break;
+	case 'q':
+		speed=MAX/2;
+		break;
+	case 'e':
+		speed=MAX;
+		break;
+	default:
+		speed=speed;
+		break;
+	}
+	return speed;
+}
+
 // Print communication result
 void PrintCommStatus(int CommStatus)
 {
