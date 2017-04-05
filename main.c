@@ -5,30 +5,34 @@
  * Author : root
  */ 
 #define __DELAY_BACKWARD_COMPATIBLE__
+#define MAX 1023
 
+#define F_CPU 8000000UL
 #include <stdio.h>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#define F_CPU 8000000UL
-
+#include <util/delay.h>
 #include <math.h>
+
+
 #include "dynamixel.h"
 #include "serial.h"
 #include "AX12A.h"
-#include <util/delay.h>
-#include <avr/interrupt.h>
 
+
+
+int changeSpeed(int speedIn,int changeAmount);
+int changeSpeedPercent(int speedIn,int changeAmount);
+int keepWithinBounds(int input,int minB, int maxB);
+int keyboardInput(int speed);
 
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
-int keepWithinBounds(int input);
-int increaseSpeed(int speedIn, int increaseAmount);
+
 int servoId1=0;
 int servoId2=1;
-int oldV=300;
-int inputV=0;
 int currentSpeed=0; //0-1023 = ccw direction 1024-2047= cw;
 int timer=0;
 int randSpeedChange = 0.2*1023; //change by 10%    
@@ -47,6 +51,7 @@ int main(void)
     
 		srand(time(NULL));
 		currentSpeed=950;
+		cs1=currentSpeed; cs2=currentSpeed;
 		
 	//set to wheel mode
 	dxl_write_word(servoId1, ID,servoId1);
@@ -54,34 +59,20 @@ int main(void)
 	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
-	dxl_write_word(servoId1, MAX_TORQUE_L, 1023);
-	dxl_write_word(servoId1, TORQUE_LIMIT_L, 1023);
+	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
 	
 	dxl_write_word(servoId2, ID, servoId2);
 	dxl_write_word(servoId2, BAUDRATE,1);
 	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
-	dxl_write_word(servoId2, MAX_TORQUE_L, 1023);
-	dxl_write_word(servoId2, TORQUE_LIMIT_L, 1023);
+	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
+	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
 	
 	
 	
-	printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
-	//scanf("%d",&inputV);
-	//if(oldV!=inputV)
-	//{
-		////sanitize inputs
-		//inputV=inputV<0 ? 0:inputV;
-		//inputV=inputV>1023 ? 1023 : inputV;
-		//
-		//oldV=inputV;
-		//dxl_write_word(servoId, MOVING_SPEED_L, inputV );
-	//}
-	
-
-	
-	
+	printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");	
 	printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
     while (1) 
     {
