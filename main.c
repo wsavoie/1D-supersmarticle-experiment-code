@@ -76,42 +76,32 @@ int main(void)
 	printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
     while (1) 
     {
-		//unsigned char ReceivedData = getchar();
-		//if(ReceivedData ==  'w')
-			//currentSpeed=currentSpeed+10;
-		//else if(ReceivedData == 's')
-			//currentSpeed=currentSpeed-10;
-		//else if(ReceivedData == 0x1b) //esc
-			//currentSpeed=0;
-		//else if(ReceivedData == 'q') 
-			//currentSpeed=512;
-		//else if(ReceivedData == 'e') 
-			//currentSpeed=1023;
-		//else
-			//currentSpeed=currentSpeed;
+		
 		
 		//////////////////////////////////////////
 		//timer++;
 		//if (timer>timerSwitch)
 		//{
-			//cs1=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
-			//cs2=currentSpeed+(rand())%randSpeedChange-randSpeedChange/2;
+			//cs1=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2);
+			//cs2=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2);
 			//timer=0;
-			//
-					//cs1=keepWithinBounds(cs1);
-					//cs2=keepWithinBounds(cs2);
-					//
 			//printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
 		//}
 		//else
 		//{
-			//////////////////////////////////////////////////////
-			cs1=currentSpeed;
-			cs2=currentSpeed;
+			
+			/////for keyboard update/////
+			//currentSpeed=keyboardInput(currentSpeed);
+			
+			////for regular update//////
+			//currentSpeed=MAX;
+			
+			//cs1=currentSpeed; cs2=currentSpeed;
 		//}
-		cs1=keepWithinBounds(cs1);
-		cs2=keepWithinBounds(cs2);
+			
 		
+		cs1=keepWithinBounds(cs1,0,MAX);
+		cs2=keepWithinBounds(cs2,0,MAX);
 		
 		dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
 		dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
