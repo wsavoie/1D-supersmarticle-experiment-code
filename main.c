@@ -7,7 +7,16 @@
 #define __DELAY_BACKWARD_COMPATIBLE__
 #define MAX 1023
 
-#define F_CPU 8000000UL
+typedef enum {WHEEL,JOINT, TRUESIN, WHEELRAND,TEST} m;
+static const char *MODE_STRING[] = {"WHEEL", "JOINT", "TRUESIN", "WHEELRAND","TEST"};
+m mode=TRUESIN;	
+//#define F_CPU 1200000UL
+#define F_CPU 16000000UL
+#define DEFAULT_BAUDNUM 1 
+#define NUM_ACTUATOR 2
+#define STEP_THETA			(M_PI / 50.0f) // Large value is more fast
+#define CONTROL_PERIOD		(10) // msec (Large value is more slow)
+
 #include <stdio.h>
 #include <stdlib.h>     /* srand, rand */
 #include <time.h>       /* time */
@@ -21,14 +30,18 @@
 #include "serial.h"
 #include "AX12A.h"
 
-
+double t;
+double dt;
 int servoId1=0;
 int servoId2=1;
 int currentSpeed=0; //0-1023 = ccw direction 1024-2047= cw;
 int timer=0;
-float percentChange=.10;
-int randSpeedChange = 2*percentChange*1023; //multiply by 2 to allow positive and negative change by percent change value
-int delayTime = 200;
+//float percentChange=.10;
+//int randSpeedChange = 2*percentChange*1023; //multiply by 2 to allow positive and negative change by percent change value
+
+int randSpeedChange = .2*1023; //10% change
+int delayTime;
+double angfreq;
 int cs1=0;
 int cs2=0;
 int timerSwitch=9;
@@ -40,9 +53,12 @@ int changeSpeedPercent(int speedIn,int changeAmount,int id);
 int keepWithinBounds(int input,int minB, int maxB);
 int keyboardInput(int speed);
 
-//joint mode functions
-void setWheelModeAddresses();
 
+
+//joint mode functions
+void setJointModeAddresses();
+void setPositionAng(int id, double ang);
+void setPositionRad(int id, double rad);
 
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
@@ -50,54 +66,239 @@ void PrintErrorCode(void);
 
 int main(void)
 {
-
+	int id[NUM_ACTUATOR]={0, 1};
+	float phase[NUM_ACTUATOR]={M_PI/2, 0};
+	int AmpPos = 310;
+	int centeredPos=512;
+	delayTime=200;
+	float theta=0;
+	int GoalPos;
+	int i;
+	int CommStatus;
+	t=0;
+	dt=0.0005;
+	//joint = true, wheel = false
+	char str[20];
 	serial_initialize(57600);
-	dxl_initialize( 0, 1 ); 
+	dxl_initialize( 0, DEFAULT_BAUDNUM ); 
 	sei();	// Interrupt Enable
 	
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
 	srand(time(NULL));
 	
+	//go to an initial position, all styles do this!
+	setJointModeAddresses();
+	//true position of center is 150, do everything about that point but I offset in function by 60 degrees so middle = 90 deg
+	//setPositionRad(servoId1,phase[servoId1]);
+	//setPositionRad(servoId2,phase[servoId2]);
+		////rad=rad+M_PI/3;
+		//M_PI/180/0.005061
+	dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+phase[servoId1]/.005061);
+	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
+		
+	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
+	printf("Press enter to continue:\n\n");
+	scanf("%s", str);
 	
 	
-	printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");	
-	printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
-    while (1) 
-    {
-		
-		
-		//////////////////////////////////////////
-		//timer++;
-		//if (timer>timerSwitch)
-		//{
-			//cs1=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2);
-			//cs2=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2);
-			//timer=0;
-			//printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
-		//}
-		//else
-		//{
-			
-			/////for keyboard update/////
-			//currentSpeed=keyboardInput(currentSpeed);
-			
-			////for regular update//////
-			//currentSpeed=MAX;
-			//cs1=currentSpeed; cs2=currentSpeed;
-			//dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
-			//dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
-
-		//}
-			
-			
-			
-		//printf("current speed: S1=%d\t S2=%d\n", cs1,cs2);
-
-
-		_delay_ms(delayTime);
-
-		
+	switch(mode)
+	{
+		case JOINT: case TRUESIN:
+		{//joint
+			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
+			angfreq= 11.7518;
+			break;
+		}
+		case WHEEL: case WHEELRAND:
+		{//wheel
+			currentSpeed=MAX;
+			setWheelModeAddresses();
+			printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
+			printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);	
+			break;
+		}
+	
+		case TEST:
+		{//wheel
+			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
+			angfreq= 11.7518;
+			//float period = 2*M_PI/angfreq;
+			break;
+		}
     }
+	
+	//loop
+	while (1)
+	{	
+		switch(mode)
+		{
+			case WHEEL:
+			{		
+				///for keyboard update/////
+				currentSpeed=keyboardInput(currentSpeed);
+			
+				//for regular update//////
+				//currentSpeed=MAX;
+				
+				cs1=currentSpeed; cs2=currentSpeed;
+				dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
+				dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+				break;
+			}
+			case WHEELRAND:
+			{			
+				timer++;
+				if (timer>timerSwitch)
+				{
+					cs1=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2,servoId1);
+					cs2=changeSpeedPercent(currentSpeed,rand()%randSpeedChange-randSpeedChange/2,servoId2);
+					timer=0;
+					printf("current speed: S1=%d\t S2=%d\r\n", cs1,cs2);
+				}
+				else
+				{
+				
+					///for keyboard update/////
+					//currentSpeed=keyboardInput(currentSpeed);
+				
+					//for regular update//////
+					currentSpeed=MAX;
+				
+					cs1=currentSpeed; cs2=currentSpeed;
+					dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
+					dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+
+				}
+				//_delay_ms(1000);
+				break;
+			}
+			case JOINT:
+			{
+				dt=0.00025;
+				
+				//old way of doing joint
+				//double rad = M_PI/2*sin(angfreq*t+phase[servoId1])+M_PI/2;
+				//double rad2 = M_PI/2*sin(angfreq*t+phase[servoId2])+M_PI/2;
+				//setPositionRad(servoId1,rad);
+				//setPositionRad(servoId2,rad2);
+				//t = t+dt;
+				//_delay_ms(dt*1000);
+				
+				dxl_set_txpacket_id(BROADCAST_ID);
+				dxl_set_txpacket_instruction(INST_SYNC_WRITE);
+				dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
+				dxl_set_txpacket_parameter(1, 2);
+				for( i=0; i<NUM_ACTUATOR; i++ )
+				{
+					//-1 to +1 saw tooth wave
+					
+					dxl_set_txpacket_parameter(2+3*i, id[i]);
+					//goes between +AmpPos and -AmpPos
+					GoalPos = (int)(AmpPos*sin(angfreq*t+phase[i]))+centeredPos; 
+					
+					//printf( "%d  ", GoalPos );
+					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
+					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
+					
+				}
+				dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
+				
+				//printf( "\n" );
+				
+				dxl_txrx_packet();
+				//CommStatus = dxl_get_result();
+				//int moving =1;
+				//while(moving==1)
+				//{
+				//moving =dxl_read_byte( servoId1, MOVING );
+				//}
+				
+				//PrintErrorCode();
+				//else
+				//PrintCommStatus(CommStatus);
+				t = t+dt;
+				_delay_ms(dt*1000);
+
+
+				break;
+			}
+			case TRUESIN: //NOT DONE!
+			{
+				//unit of speed = .111 rpm or .01162 rad/s
+				//max= 11.89 rad/s
+				
+
+				dxl_set_txpacket_id(BROADCAST_ID);
+				dxl_set_txpacket_instruction(INST_SYNC_WRITE);
+				dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
+				dxl_set_txpacket_parameter(1, 2);
+				for( i=0; i<NUM_ACTUATOR; i++ )
+				{
+					//-1 to +1 saw tooth wave
+					
+					dxl_set_txpacket_parameter(2+3*i, id[i]);
+					//goes between +AmpPos and -AmpPos
+					//https://en.wikipedia.org/wiki/Triangle_wave
+					GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i])) +centeredPos);
+					//printf( "%d  ", GoalPos );
+					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
+					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
+					
+				}
+				dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
+				
+				//printf( "\n" );
+				
+				dxl_txrx_packet();
+				//CommStatus = dxl_get_result();
+				//if( CommStatus == COMM_RXSUCCESS )
+				//PrintErrorCode();
+				//else
+				//PrintCommStatus(CommStatus);
+				t = t+dt;
+				_delay_ms(dt*1000);
+
+				break;
+			}
+			case TEST://TRY DOING REGWRITE NEXT
+			{
+				
+				dxl_set_txpacket_id(BROADCAST_ID);
+				dxl_set_txpacket_instruction(INST_SYNC_WRITE);
+				dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
+				dxl_set_txpacket_parameter(1, 2);
+				for( i=0; i<NUM_ACTUATOR; i++ )
+				{
+					dxl_set_txpacket_parameter(2+3*i, id[i]);
+					//goes between +AmpPos and -AmpPos
+					GoalPos = (int)(sin(theta-phase[i]) * (float)AmpPos+(float)centeredPos);
+					printf( "%d  ", GoalPos );
+					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
+					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
+				}
+				dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
+				
+				printf( "\n" );
+				
+				dxl_txrx_packet();
+				CommStatus = dxl_get_result();
+				if( CommStatus == COMM_RXSUCCESS )
+				PrintErrorCode();
+				else
+				PrintCommStatus(CommStatus);
+				
+				theta += STEP_THETA;
+
+				if( theta > 2*M_PI )
+				theta -= 2*M_PI;
+				
+				_delay_ms(CONTROL_PERIOD);
+				
+				break;
+			}
+		}
+		
+}
 	return 1;
 }
 
@@ -109,45 +310,83 @@ void setWheelModeAddresses()
 	
 	//set to wheel mode
 	dxl_write_word(servoId1, ID,servoId1);
-	dxl_write_word(servoId1, BAUDRATE,1);
+	dxl_write_word(servoId1, BAUDRATE,DEFAULT_BAUDNUM);
 	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
+	dxl_write_word(servoId1, PUNCH_L, 1000);
+	dxl_write_word(servoId1, CW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId1, CCW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
 	
 	dxl_write_word(servoId2, ID, servoId2);
-	dxl_write_word(servoId2, BAUDRATE,1);
+	dxl_write_word(servoId2, BAUDRATE,DEFAULT_BAUDNUM);
 	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
 	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
 	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
+	dxl_write_word(servoId2, PUNCH_L, 1000);
+	dxl_write_word(servoId2, CW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId2, CCW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
+		
 }
 
 void setJointModeAddresses()
 {
-	currentSpeed=1023;
+	//.111 rads/s per index
+	currentSpeed=1011; //= 11.7518 rad/s
 	cs1=currentSpeed; cs2=currentSpeed;
 	
 	//set to wheel mode
 	dxl_write_word(servoId1, ID,servoId1);
-	dxl_write_word(servoId1, BAUDRATE,1);
+	dxl_write_word(servoId1, BAUDRATE,DEFAULT_BAUDNUM);
 	dxl_write_word(servoId1, CW_ANGLE_LIMIT_L, 0);
-	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId1, CCW_ANGLE_LIMIT_L, MAX );
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
+	dxl_write_word(servoId1, PUNCH_L, 32);
+	dxl_write_word(servoId1, CW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId1, CCW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
 	
 	dxl_write_word(servoId2, ID, servoId2);
-	dxl_write_word(servoId2, BAUDRATE,1);
+	dxl_write_word(servoId2, BAUDRATE,DEFAULT_BAUDNUM);
 	dxl_write_word(servoId2, CW_ANGLE_LIMIT_L, 0);
-	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, 0 );
+	dxl_write_word(servoId2, CCW_ANGLE_LIMIT_L, MAX );
 	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
+	dxl_write_word(servoId2, PUNCH_L, 32);
+	dxl_write_word(servoId2, CW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId2, CCW_COMPLIANCE_SLOPE, 2);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
 }
 
+//set position of servo in rads
+void setPositionRad(int id, double rad)
+{
+	//rad=rad+M_PI/3;
+	rad=rad+150*M_PI/180;
+	int add=rad/0.005061;
+	dxl_write_word(id, GOAL_POSITION_L, add);
+}
+
+//set position of servo in ang
+void setPositionAng(int id, double ang)
+{	
+	ang=ang+150;
+	int add=ang/.29;
+	dxl_write_word(id, GOAL_POSITION_L, add);
+}
 //change speed by 10 bit amount
 int changeSpeed(int speedIn,int changeAmount, int id)
 {
