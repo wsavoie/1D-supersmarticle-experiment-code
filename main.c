@@ -7,6 +7,7 @@
 #define __DELAY_BACKWARD_COMPATIBLE__
 #define MAX 1023
 
+
 typedef enum {WHEEL,JOINT, TRUESIN, WHEELRAND,TEST} m;
 static const char *MODE_STRING[] = {"WHEEL", "JOINT", "TRUESIN", "WHEELRAND","TEST"};
 m mode=TRUESIN;	
@@ -24,7 +25,8 @@ m mode=TRUESIN;
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <math.h>
-
+#define d2r(x) x*M_PI/180.0
+#define r2d(x) x*180.0/M_PI
 
 #include "dynamixel.h"
 #include "serial.h"
@@ -53,8 +55,6 @@ int changeSpeedPercent(int speedIn,int changeAmount,int id);
 int keepWithinBounds(int input,int minB, int maxB);
 int keyboardInput(int speed);
 
-
-
 //joint mode functions
 void setJointModeAddresses();
 void setPositionAng(int id, double ang);
@@ -67,9 +67,9 @@ void PrintErrorCode(void);
 int main(void)
 {
 	int id[NUM_ACTUATOR]={0, 1};
-	float phase[NUM_ACTUATOR]={M_PI/2, 0};
+	float phase[NUM_ACTUATOR]={0,0};
 	int AmpPos = 310;
-	int centeredPos=512;
+	int centeredPos=478; //478
 	delayTime=200;
 	float theta=0;
 	int GoalPos;
@@ -93,9 +93,10 @@ int main(void)
 	//setPositionRad(servoId2,phase[servoId2]);
 		////rad=rad+M_PI/3;
 		//M_PI/180/0.005061
-	dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+phase[servoId1]/.005061);
-	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
-		
+			//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
+	dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId1]))%180/0.29));
+	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
+	
 	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
 	printf("Press enter to continue:\n\n");
 	scanf("%s", str);
@@ -194,7 +195,8 @@ int main(void)
 					
 					dxl_set_txpacket_parameter(2+3*i, id[i]);
 					//goes between +AmpPos and -AmpPos
-					GoalPos = (int)(AmpPos*sin(angfreq*t+phase[i]))+centeredPos; 
+					
+					GoalPos = (int)(AmpPos*sin(angfreq*t+ phase[i]))+centeredPos; 
 					
 					//printf( "%d  ", GoalPos );
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
@@ -375,7 +377,7 @@ void setJointModeAddresses()
 void setPositionRad(int id, double rad)
 {
 	//rad=rad+M_PI/3;
-	rad=rad+150*M_PI/180;
+	rad=rad+d2r(150);
 	int add=rad/0.005061;
 	dxl_write_word(id, GOAL_POSITION_L, add);
 }
