@@ -53,7 +53,8 @@ void setWheelModeAddresses();
 int changeSpeed(int speedIn,int changeAmount,int id);
 int changeSpeedPercent(int speedIn,int changeAmount,int id);
 int keepWithinBounds(int input,int minB, int maxB);
-int keyboardInput(int speed);
+int keyboardInputSpeed(int speed);
+void keyboardInputChangePhase();
 
 //joint mode functions
 void setJointModeAddresses();
@@ -63,11 +64,11 @@ void setPositionRad(int id, double rad);
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 
-
+int id[NUM_ACTUATOR]={0, 1};
+float phase[NUM_ACTUATOR]={-M_PI_2,0};
+	
 int main(void)
 {
-	int id[NUM_ACTUATOR]={0, 1};
-	float phase[NUM_ACTUATOR]={0,0};
 	int AmpPos = 310;
 	int centeredPos=478; //478
 	delayTime=200;
@@ -98,9 +99,14 @@ int main(void)
 	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
 	
 	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
-	printf("Press enter to continue:\n\n");
-	scanf("%s", str);
+
 	
+	int switchPhase=0;
+	if(switchPhase==0)
+	{
+			printf("Press enter to continue:\n\n");
+			scanf("%s", str);
+	}
 	
 	switch(mode)
 	{
@@ -108,6 +114,15 @@ int main(void)
 		{//joint
 			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
 			angfreq= 11.7518;
+			
+
+			if(switchPhase)
+			{
+				keyboardInputChangePhase();
+				dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId1]))%180/0.29));
+				dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
+				_delay_ms(1000);
+			}
 			break;
 		}
 		case WHEEL: case WHEELRAND:
@@ -127,6 +142,9 @@ int main(void)
 			break;
 		}
     }
+					//printf("Press enter to continue:\n\n");
+					//scanf("%s", str);
+	
 	
 	//loop
 	while (1)
@@ -136,7 +154,7 @@ int main(void)
 			case WHEEL:
 			{		
 				///for keyboard update/////
-				currentSpeed=keyboardInput(currentSpeed);
+				currentSpeed=keyboardInputSpeed(currentSpeed);
 			
 				//for regular update//////
 				//currentSpeed=MAX;
@@ -321,8 +339,8 @@ void setWheelModeAddresses()
 	dxl_write_word(servoId1, PUNCH_L, 1000);
 	dxl_write_word(servoId1, CW_COMPLIANCE_SLOPE, 2);
 	dxl_write_word(servoId1, CCW_COMPLIANCE_SLOPE, 2);
-	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
-	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 0);
+	dxl_write_word(servoId1, CCW_COMPLIANCE_MARGIN, 0);
 	
 	dxl_write_word(servoId2, ID, servoId2);
 	dxl_write_word(servoId2, BAUDRATE,DEFAULT_BAUDNUM);
@@ -334,8 +352,8 @@ void setWheelModeAddresses()
 	dxl_write_word(servoId2, PUNCH_L, 1000);
 	dxl_write_word(servoId2, CW_COMPLIANCE_SLOPE, 2);
 	dxl_write_word(servoId2, CCW_COMPLIANCE_SLOPE, 2);
-	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
-	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 0);
+	dxl_write_word(servoId2, CCW_COMPLIANCE_MARGIN, 0);
 		
 }
 
@@ -416,8 +434,8 @@ int keepWithinBounds(int input,int minB,int maxB)
 }
 
 //change speed with keyboard input
-int keyboardInput(int speed)
-{
+int keyboardInputSpeed(int speed)
+{	
 	unsigned char ReceivedData = getchar();
 	switch(ReceivedData)
 	{
@@ -451,6 +469,40 @@ int keyboardInput(int speed)
 	return speed;
 }
 
+void keyboardInputChangePhase()
+{	
+	//char str[20];
+	printf("1=(0,0) 2=(p,0),3=(p2,0),4=(-p2,0)\n");
+	unsigned char ReceivedData = getchar();
+	
+	switch(ReceivedData)
+	{
+		case '1':
+			phase[servoId1]=0;
+			phase[servoId2]=0;
+		break;
+		case '2':
+			phase[servoId1]=M_PI;
+			phase[servoId2]=0;
+		break;
+		case '3':
+			phase[servoId1]=M_PI_2;
+			phase[servoId2]=0;
+		break;
+		case '4':
+			phase[servoId1]=-M_PI_2;
+			phase[servoId2]=0;
+		break;
+		default:
+			
+		break;
+	}
+	printf("phase=%s",&ReceivedData);
+	//phase[0]=a*M_PI;
+	//printf ("Enter x for servo 2 phase (phi=x*pi):\n");
+	//scanf("%f",&str);
+	//phase[1]=a*M_PI;
+}
 // Print communication result
 void PrintCommStatus(int CommStatus)
 {
