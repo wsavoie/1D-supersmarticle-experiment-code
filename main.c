@@ -325,9 +325,6 @@ int main(void)
 //initialize wheel mode system addresses
 void setWheelModeAddresses()
 {
-	currentSpeed=1023;
-	cs1=currentSpeed; cs2=currentSpeed;
-	
 	//set to wheel mode
 	dxl_write_word(servoId1, ID,servoId1);
 	dxl_write_word(servoId1, BAUDRATE,DEFAULT_BAUDNUM);
