@@ -6,7 +6,8 @@
  */ 
 #define __DELAY_BACKWARD_COMPATIBLE__
 #define MAX 1023
-
+#define CCW 1023
+#define CW 2047
 
 typedef enum {WHEEL,JOINT, TRUESIN, WHEELRAND,TEST} m;
 static const char *MODE_STRING[] = {"WHEEL", "JOINT", "TRUESIN", "WHEELRAND","TEST"};
@@ -65,7 +66,7 @@ void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 
 int id[NUM_ACTUATOR]={0, 1};
-float phase[NUM_ACTUATOR]={-M_PI_2,0};
+float phase[NUM_ACTUATOR]={M_PI/2,0};
 	
 int main(void)
 {
@@ -99,12 +100,13 @@ int main(void)
 	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
 	
 	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
-
-	
+	_delay_ms(100);
+	printf( "\n temps:(%d,%d)",dxl_read_word( servoId1, PRESENT_TEMP ), dxl_read_word( servoId2, PRESENT_TEMP ) );
+	printf( "\n phase:(%e,%e)\n",phase[servoId1],phase[servoId2]);
 	int switchPhase=0;
 	if(switchPhase==0)
 	{
-			printf("Press enter to continue:\n\n");
+			printf("Press any key then enter to continue:\n\n");
 			scanf("%s", str);
 	}
 	
@@ -127,7 +129,7 @@ int main(void)
 		}
 		case WHEEL: case WHEELRAND:
 		{//wheel
-			currentSpeed=MAX;
+			currentSpeed=CW;
 			setWheelModeAddresses();
 			printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
 			printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);	
@@ -154,14 +156,14 @@ int main(void)
 			case WHEEL:
 			{		
 				///for keyboard update/////
-				currentSpeed=keyboardInputSpeed(currentSpeed);
+				//currentSpeed=keyboardInputSpeed(currentSpeed);
 			
 				//for regular update//////
 				//currentSpeed=MAX;
 				
 				cs1=currentSpeed; cs2=currentSpeed;
 				dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
-				dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
+				dxl_write_word(servoId2, MOVING_SPEED_L, 0 );
 				break;
 			}
 			case WHEELRAND:
@@ -193,7 +195,7 @@ int main(void)
 			}
 			case JOINT:
 			{
-				dt=0.00025;
+				dt=0.0005;
 				
 				//old way of doing joint
 				//double rad = M_PI/2*sin(angfreq*t+phase[servoId1])+M_PI/2;
@@ -333,11 +335,11 @@ void setWheelModeAddresses()
 	dxl_write_word(servoId1, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId1, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId1, TORQUE_LIMIT_L, MAX);
-	dxl_write_word(servoId1, PUNCH_L, 1000);
+	dxl_write_word(servoId1, PUNCH_L, 32);
 	dxl_write_word(servoId1, CW_COMPLIANCE_SLOPE, 2);
 	dxl_write_word(servoId1, CCW_COMPLIANCE_SLOPE, 2);
-	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 0);
-	dxl_write_word(servoId1, CCW_COMPLIANCE_MARGIN, 0);
+	dxl_write_word(servoId1, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId1, CCW_COMPLIANCE_MARGIN, 1);
 	
 	dxl_write_word(servoId2, ID, servoId2);
 	dxl_write_word(servoId2, BAUDRATE,DEFAULT_BAUDNUM);
@@ -346,11 +348,11 @@ void setWheelModeAddresses()
 	dxl_write_word(servoId2, MOVING_SPEED_L, currentSpeed );
 	dxl_write_word(servoId2, MAX_TORQUE_L, MAX);
 	dxl_write_word(servoId2, TORQUE_LIMIT_L, MAX);
-	dxl_write_word(servoId2, PUNCH_L, 1000);
+	dxl_write_word(servoId2, PUNCH_L, 32);
 	dxl_write_word(servoId2, CW_COMPLIANCE_SLOPE, 2);
 	dxl_write_word(servoId2, CCW_COMPLIANCE_SLOPE, 2);
-	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 0);
-	dxl_write_word(servoId2, CCW_COMPLIANCE_MARGIN, 0);
+	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
+	dxl_write_word(servoId2, CCW_COMPLIANCE_MARGIN, 1);
 		
 }
 
