@@ -40,8 +40,8 @@ data = importdata(file);
 % % -repmat(data.data(1,3:3:end),[size(data.data(:,3:3:end),1),1])
 data.data(any(isnan(data.data),2),:)=[];    
 t = data.data(:,2);
-x = -data.data(:,3:3:end);
-y = data.data(:,5:3:end);
+x = -data.data(:,3:3:end)*1000;
+y = data.data(:,5:3:end)*1000;
 % z = data.data(:,4:3:end);
 
 %decimate by dec

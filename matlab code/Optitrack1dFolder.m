@@ -1,5 +1,5 @@
 clear all
-fold=uigetdir('A:\1DSmartData\Optitrack');
+fold=uigetdir('A:\1DSmartData\Optitrack\');
 f=dir2(fullfile(fold,'*.csv'));
 %     clf;
 movs=struct;
