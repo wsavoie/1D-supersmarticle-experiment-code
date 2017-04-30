@@ -48,6 +48,9 @@ double angfreq;
 int cs1=0;
 int cs2=0;
 int timerSwitch=9;
+//int centeredPos=488; //478
+
+
 
 //wheel mode functions
 void setWheelModeAddresses();
@@ -61,20 +64,23 @@ void keyboardInputChangePhase();
 void setJointModeAddresses();
 void setPositionAng(int id, double ang);
 void setPositionRad(int id, double rad);
+void firstMove();
 
 void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 
 int id[NUM_ACTUATOR]={0, 1};
-float phase[NUM_ACTUATOR]={M_PI/2,0};
-	
+float phase[NUM_ACTUATOR]={-M_PI/2,0};
+int centeredPos[NUM_ACTUATOR]={483, 488};
+int GoalPos;
+float theta=0;
+int AmpPos = 310;
 int main(void)
 {
-	int AmpPos = 310;
-	int centeredPos=478; //478
+
+	//int centeredPos=488; //478
 	delayTime=200;
-	float theta=0;
-	int GoalPos;
+	
 	int i;
 	int CommStatus;
 	t=0;
@@ -96,13 +102,16 @@ int main(void)
 		////rad=rad+M_PI/3;
 		//M_PI/180/0.005061
 			//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
-	dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId1]))%180/0.29));
-	dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
+				printf("Currently running %s mode\n\n",MODE_STRING[mode]);
+				_delay_ms(300);
+				printf( "\n temps:(%d,%d)",dxl_read_word( servoId1, PRESENT_TEMP ), dxl_read_word( servoId2, PRESENT_TEMP ) );
+				printf( "\n phase:(%e,%e)\n",phase[servoId1],phase[servoId2]);
+	firstMove();
+	//dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.29));
+	//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.29));
 	
-	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
-	_delay_ms(100);
-	printf( "\n temps:(%d,%d)",dxl_read_word( servoId1, PRESENT_TEMP ), dxl_read_word( servoId2, PRESENT_TEMP ) );
-	printf( "\n phase:(%e,%e)\n",phase[servoId1],phase[servoId2]);
+	_delay_ms(600);
+
 	int switchPhase=0;
 	if(switchPhase==0)
 	{
@@ -116,14 +125,14 @@ int main(void)
 		{//joint
 			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
 			angfreq= 11.7518;
+			//angfreq= 10;
 			
-
 			if(switchPhase)
 			{
 				keyboardInputChangePhase();
-				dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId1]))%180/0.29));
-				dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+((int)(r2d(phase[servoId2]))%180/0.29));
-				_delay_ms(1000);
+				dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.293));
+				dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.293));
+				_delay_ms(500);
 			}
 			break;
 		}
@@ -216,7 +225,7 @@ int main(void)
 					dxl_set_txpacket_parameter(2+3*i, id[i]);
 					//goes between +AmpPos and -AmpPos
 					
-					GoalPos = (int)(AmpPos*sin(angfreq*t+ phase[i]))+centeredPos; 
+					GoalPos = (int)(AmpPos*sin(angfreq*t+ phase[i]))+centeredPos[i]; 
 					
 					//printf( "%d  ", GoalPos );
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
@@ -261,22 +270,29 @@ int main(void)
 					dxl_set_txpacket_parameter(2+3*i, id[i]);
 					//goes between +AmpPos and -AmpPos
 					//https://en.wikipedia.org/wiki/Triangle_wave
-					GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i])) +centeredPos);
+					GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i]))) +centeredPos[i];
 					//printf( "%d  ", GoalPos );
+							//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
+							//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
+							
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
 					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
 					
 				}
+			//
+				//dxl_set_txpacket_parameter(2, id[0]);
+				//GoalPos = (int)(2*AmpPos/M_PI*abs(asin(sin(angfreq*t/2-phase[0]))) +centeredPos[0]);
+				//dxl_set_txpacket_parameter(3, dxl_get_lowbyte(GoalPos));
+				//dxl_set_txpacket_parameter(4, dxl_get_highbyte(GoalPos));
+				//dxl_set_txpacket_parameter(5, id[1]);
+				//GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[1]))) +centeredPos[1];
+				//dxl_set_txpacket_parameter(6, dxl_get_lowbyte(GoalPos));
+				//dxl_set_txpacket_parameter(7, dxl_get_highbyte(GoalPos));
+				
+				
 				dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
-				
-				//printf( "\n" );
-				
 				dxl_txrx_packet();
-				//CommStatus = dxl_get_result();
-				//if( CommStatus == COMM_RXSUCCESS )
-				//PrintErrorCode();
-				//else
-				//PrintCommStatus(CommStatus);
+				
 				t = t+dt;
 				_delay_ms(dt*1000);
 
@@ -289,11 +305,11 @@ int main(void)
 				dxl_set_txpacket_instruction(INST_SYNC_WRITE);
 				dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
 				dxl_set_txpacket_parameter(1, 2);
-				for( i=0; i<NUM_ACTUATOR; i++ )
+				for( i=NUM_ACTUATOR-1; i<=0; i-- )
 				{
 					dxl_set_txpacket_parameter(2+3*i, id[i]);
 					//goes between +AmpPos and -AmpPos
-					GoalPos = (int)(sin(theta-phase[i]) * (float)AmpPos+(float)centeredPos);
+					GoalPos = (int)(sin(theta-phase[i]) * (float)AmpPos+(float)centeredPos[i]);
 					printf( "%d  ", GoalPos );
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
 					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
@@ -323,7 +339,33 @@ int main(void)
 }
 	return 1;
 }
+void firstMove()
+{
+dxl_set_txpacket_id(BROADCAST_ID);
+dxl_set_txpacket_instruction(INST_SYNC_WRITE);
+dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
+dxl_set_txpacket_parameter(1, 2);
+for( int i=0; i<NUM_ACTUATOR; i++ )
+{
+	//-1 to +1 saw tooth wave
+	
+	dxl_set_txpacket_parameter(2+3*i, id[i]);
+	//goes between +AmpPos and -AmpPos
+	//https://en.wikipedia.org/wiki/Triangle_wave
+	GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i]))) +centeredPos[i];
+	//printf( "%d  ", GoalPos );
+	//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
+	//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
+	
+	dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
+	dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
+	
+}
+dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
+dxl_txrx_packet();
 
+
+}
 //initialize wheel mode system addresses
 void setWheelModeAddresses()
 {
