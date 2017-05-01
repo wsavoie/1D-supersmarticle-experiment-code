@@ -1,6 +1,6 @@
-int con0 = 49; //pc14
+int con0 = 48; //pc14
 int con1 = 50; //pc13
-int con2 = 51; //pc12
+int con2 = 52; //pc12
 int val0 = 0;
 int val1 = 0;
 int val2 = 0;
@@ -37,28 +37,28 @@ fVal=val0+val1+val2;
 switch(fVal)
 {
 	case 1://state 1
-		Serial.println("1");
+		Serial.print("1");
 		break;
 	case 11://state 2
-		Serial.println("2");
+		Serial.print("2");
 		break;
 	case 100://state 3
-		Serial.println("3");
+		Serial.print("3");
 		break;
 	case 110://state 4
-		Serial.println("4");
+		Serial.print("4");
 		break;
 	case 101://state 5
-		Serial.println("5");
+		Serial.print("5");
 		break;
 	case 111://state 6
-		Serial.println("6");
+		Serial.print("6");
 		break;
 	case 10://state 7
-		Serial.println("7");
+		Serial.print("7");
 		break;
 	default:
-		Serial.println("0");
+		Serial.print("0");
 		break;
 	}
 	delay(100);
