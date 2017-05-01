@@ -6,7 +6,7 @@ if pickFile
     fold=uigetdir('A:\1DSmartData\Optitrack\');
     load(fullfile(fold,'movieInfo.mat'));
 else
-    load('A:\1DSmartData\Optitrack\data 2017-04-26\movieInfo.mat');
+    load('A:\1DSmartData\Optitrack\data 2017-04-27\movieInfo.mat');
 end
 % figure(1)
 fullfile(fold,'movieInfo.mat')
@@ -27,7 +27,7 @@ fullfile(fold,'movieInfo.mat')
 %*12. 
 %*13/14 plot yoke rotation for both smarticles
 %************************************************************
-showFigs=[1 13];
+showFigs=[1 14];
 
 %define curve params [] for all
 state=[]; phase1=[]; phase2=[]; v=[]; m=[]; f=[];
@@ -104,6 +104,9 @@ if(showFigs(showFigs==xx))
     
     plot(usedMovs(1).smarts(:,1),usedMovs(1).smarts(:,3),'^-');
     plot(usedMovs(1).smarts(:,2),usedMovs(1).smarts(:,4),'^-');
+    xlabel('x (mm)'); ylabel('y (mm)');
+    
+    figText(gcf,16);
     legend({'rot a','rot b', 'frame','smart a', 'smart b'});
 end
 %% 2 plot displacement of frame
@@ -131,7 +134,7 @@ if(showFigs(showFigs==xx))
             movPhase= -diff(usedMovs(i).pars(2:3));
             if movPhase==uniPhase(j)
                 drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(1,2))/...
-                    usedMovs(i).t(end)*1000;
+                    usedMovs(i).t(end);
                 drifts{j}=[drifts{j} drift];
             end
         end
@@ -156,7 +159,7 @@ if(showFigs(showFigs==xx))
     [pks locs]=findpeaks(usedMovs(i).rots(:,1),'minpeakdistance',100);
     ypeakpos=usedMovs(i).frame(locs,2);
     t=usedMovs(i).t(locs);
-    vel=diff(ypeakpos)./diff(t)*1000;
+    vel=diff(ypeakpos)./diff(t);
     v{i}=vel;
     plot(cumsum(diff(t)),vel);
     vv{i}=['v',num2str(usedMovs(i).pars(4)),' v=',num2str(mean(vel),'%2.2f')];
@@ -191,15 +194,15 @@ if(showFigs(showFigs==xx))
     caxis([t(ibeg),t(end)])
     
     subplot(1,2,1);
-    %             plot(diff(usedMovs(i).smarts(ibeg:end,2))./diff(t(ibeg:end))*1000,1000*diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),'-');
-    scatter(diff(usedMovs(i).smarts(ibeg:end,3))./diff(t(ibeg:end))*1000,1000*diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),[],c);
-    %             comet(diff(usedMovs(i).smarts(ibeg:end,2))./diff(t(ibeg:end))*1000,1000*diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),.00001);
+    %             plot(diff(usedMovs(i).smarts(ibeg:end,2))./diff(t(ibeg:end)),diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),'-');
+    scatter(diff(usedMovs(i).smarts(ibeg:end,3))./diff(t(ibeg:end)),diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),[],c);
+    %             comet(diff(usedMovs(i).smarts(ibeg:end,2))./diff(t(ibeg:end)),diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),.00001);
     xlabel(['s_1 ,speed (mm/s)']);
     ylabel('frame speed (mm/s)')
     
     subplot(1,2,2)
-    %             plot(diff(usedMovs(i).smarts(ibeg:end,4))./diff(t(ibeg:end))*1000,1000*diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),'-');
-    scatter(diff(usedMovs(i).smarts(ibeg:end,4))./diff(t(ibeg:end))*1000,1000*diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),[],c);
+    %             plot(diff(usedMovs(i).smarts(ibeg:end,4))./diff(t(ibeg:end)),diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),'-');
+    scatter(diff(usedMovs(i).smarts(ibeg:end,4))./diff(t(ibeg:end)),diff(usedMovs(i).frame(ibeg:end,2))./diff(t(ibeg:end)),[],c);
     xlabel(['s_2 speed (mm/s)']);
     caxis([t(ibeg),t(end)])
     cc=colorbar;
@@ -221,10 +224,10 @@ if(showFigs(showFigs==xx))
         [pks,locs]=findpeaks(usedMovs(i).rots(:,1),'minpeakdistance',100);
         ypeakpos=usedMovs(i).frame(locs,2);
         t=usedMovs(i).t(locs);
-        d{i}=diff(ypeakpos)*1000;
+        d{i}=diff(ypeakpos);
         lens(i)=length(ypeakpos)-1;
         
-        %         vel=diff(ypeakpos)./diff(t)*1000;
+        %         vel=diff(ypeakpos)./diff(t);
         %         v{i}=vel;
         %         plot(cumsum(diff(t)),vel);
         %         vv{i}=['v',num2str(usedMovs(i).pars(4)),' v=',num2str(mean(vel),'%2.2f')];
@@ -262,7 +265,7 @@ if(showFigs(showFigs==xx))
                 t=1;
                 
                 drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(t,2))/...
-                    usedMovs(i).t(end)*1000;
+                    usedMovs(i).t(end);
                 drifts{j}=[drifts{j} drift];
             end
         end
@@ -304,16 +307,16 @@ if(showFigs(showFigs==xx))
 end
 
 %% 13 plot yoke rotation for both smarticles
-xx=13;
+xx=[13,14];
 if(showFigs(showFigs==xx))
-    figure(xx);
+    figure(xx(1));
     hold on;
-    x=1;
-    t=(usedMovs(x).t<10);
+    x=5;
+    t=(usedMovs(x).t<5);
     %         rotdisa=sum(sqrt(diff(usedMovs(1).rots(t,1)).^2+diff(usedMovs(1).rots(t,3)).^2))
     %         rotdisb=sum(sqrt(diff(usedMovs(1).rots(t,2)).^2+diff(usedMovs(1).rots(t,4)).^2))
-    %         dx=diff(usedMovs(1).rots(t,1)*1000);
-    %         dy=diff(usedMovs(1).rots(t,3)*1000);
+    %         dx=diff(usedMovs(1).rots(t,1));
+    %         dy=diff(usedMovs(1).rots(t,3));
     %         int = 1+(dy./dx).^2;
     %         len=sum(int.*dx);
     sx=usedMovs(x).smarts(t,1:2);
@@ -322,31 +325,35 @@ if(showFigs(showFigs==xx))
     ry=usedMovs(x).rots(t,3:4);
     rz=zeros(size(ry));
     
+    %center smarticle position and rotation
     sx=bsxfun(@minus,sx,sx(1,:));
     sy=bsxfun(@minus,sy,sy(1,:));
     rx=bsxfun(@minus,rx,rx(1,:));
     ry=bsxfun(@minus,ry,ry(1,:));
+    %remove effect of smarticle displacement from rotation track
     newrx=rx-sx; 
     newry=ry-sy;
     
+    %center around zero
     newrx=bsxfun(@minus,newrx,min((newrx)));
     newry=bsxfun(@minus,newry,min((newry)));
-    
-%     newrx=bsxfun(@minus,newrx,max(abs(newrx)/2));
     newry=bsxfun(@minus,newry,max(abs(newry)/2));
+    
+    %scale the output
     newrx=bsxfun(@rdivide,newrx,max(abs(newrx)));
     newry=bsxfun(@rdivide,newry,max(abs(newry)));
     
+    %code used to rotate the rx and ry
 %     zz=[newrx(:,1)'; newry(:,1)'];
 %     rot=4*pi/180;
 %     r=[cos(rot) -sin(rot); sin(rot) cos(rot)]
 %     zz=(r*zz)';
 %        plot(zz(:,1),zz(:,2),'k'); 
-    plot(newrx(:,1),newry(:,1));
 
+    plot(newrx(:,1),newry(:,1));
     plot(newrx(:,2),newry(:,2));
-%     phi=atan2(newry,newrx)/pi*180;
-    phi=atan2(newry,newrx);
+    plot(newrx(1,1),newry(1,1),'ko');
+     plot(newrx(1,2),newry(1,2),'k^');
 %     plot(rx1,newry(:,2));
 %     plot(rx2,newry(:,2));
     axis tight
@@ -355,9 +362,10 @@ if(showFigs(showFigs==xx))
     title('yoke trajectory');
     xlabel('x (normalized)'); ylabel('y (normalized)');
     
-    figure(xx+1);
+    figure(xx(2));
     hold on;
-    plot(phi)
+    phi=atan2(newry,newrx);
+%     plot(rad2deg(phi))
     plot(sin(phi));
     figText(gcf,16); 
     xlabel('frame'); ylabel('\theta');
