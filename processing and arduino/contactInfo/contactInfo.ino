@@ -37,29 +37,28 @@ fVal=val0+val1+val2;
 switch(fVal)
 {
 	case 1://state 1
-		Serial.print("1");
+		Serial.write(1);
 		break;
 	case 11://state 2
-		Serial.print("2");
+		Serial.write(2);
 		break;
 	case 100://state 3
-		Serial.print("3");
+		Serial.write(3);
 		break;
 	case 110://state 4
-		Serial.print("4");
+		Serial.write(4);
 		break;
 	case 101://state 5
-		Serial.print("5");
+		Serial.write(5);
 		break;
 	case 111://state 6
-		Serial.print("6");
+		Serial.write(6);
 		break;
 	case 10://state 7
-		Serial.print("7");
+		Serial.write(7);
 		break;
 	default:
-		Serial.print("0");
+		Serial.write((byte)0);
 		break;
 	}
-	delay(100);
 }
