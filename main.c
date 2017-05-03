@@ -70,16 +70,16 @@ void PrintCommStatus(int CommStatus);
 void PrintErrorCode(void);
 
 int id[NUM_ACTUATOR]={0, 1};
-float phase[NUM_ACTUATOR]={-M_PI/2,0};
-int centeredPos[NUM_ACTUATOR]={483, 488};
+float phase[NUM_ACTUATOR]={-M_PI_2,0};
+int centeredPos[NUM_ACTUATOR]={484, 488};
 int GoalPos;
 float theta=0;
-int AmpPos = 310;
+int AmpPos = 311;
 int main(void)
 {
 
 	//int centeredPos=488; //478
-	delayTime=200;
+	delayTime=200; 
 	
 	int i;
 	int CommStatus;
@@ -110,7 +110,7 @@ int main(void)
 	//dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.29));
 	//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.29));
 	
-	_delay_ms(600);
+	_delay_ms(100);
 
 	int switchPhase=0;
 	if(switchPhase==0)
