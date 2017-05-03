@@ -11,11 +11,12 @@
   int h=300; int w=640;
   int backCol=51;  
   int bufferOld=1;
-  String name="s=1_pa=0_pb=-1_v=2341";
+  String name="s=1_pa=-0.5_pb=0_v=1";
     void setup() {
 
       background(backCol);
-      
+      surface.setTitle("state visualizer");
+     
       size(640,330);
     
       locx[0] = 1*w/10;  locx[1] = 1*w/10;
@@ -34,16 +35,9 @@
       }
 
 
-       printArray(Serial.list());
-       //arduinoPort = new Serial( this, Serial.list()[1], 9600 );
-   
-       robotisPort= new Serial( this, "COM4", 57600 );
-       
-
-       robotisPort.write(65);
-       delay(100);
-       robotisPort.write(13);
-       arduinoPort = new Serial( this, "COM9", 9600 );
+       printArray(Serial.list());  
+       startRobotis();
+       startArduino();
          time = millis();//store the current time
        output = createWriter( "A:\\1DSmartData\\ContactData\\"+name+".txt" );
         
@@ -53,13 +47,14 @@
        byte[] inBuffer = new byte[7];
        noFill();
        
-        strokeWeight(2);
+      strokeWeight(2);
       int count = 0;
        while (arduinoPort.available() > 0) 
        {
          
          inBuffer = arduinoPort.readBytes();
           t=(millis()-time)/1000.0;
+          //system doesn't properly store first .1 seconds in file
           if(t>.1)
          { //<>//
             if(inBuffer!=null)
@@ -71,25 +66,47 @@
                  stroke(255,0,0); strokeWeight(2);
                  bufferOld=inBuffer[0];
                 rect(locx[inBuffer[0]-1]-10, locy[inBuffer[0]-1]-10, 190,80);
-                save("A:\\1DSmartData\\contactVid\\"+count+".tga");
+                //save("A:\\1DSmartData\\contactVid\\"+count+".tga");
                 count++;
             }
          }
        }
   }
        
-        //if (arduinoPort.available() > 0 ) {
-        //     //String value = arduinoPort.readString();
-        //     //if ( value != null ) 
-        //     //{
-        //     //   t=(millis()-time)/1000.0;    
-        //     //   output.println( value+"\t"+t );
-        //     //}
-        //    byte[] value = arduinoPort.readBytes();
-        //        t=(millis()-time)/1000.0;    
-        //        output.println( value[1]+"\t"+t );
-        //}
-    //}
+    void startRobotis()
+    {
+      try
+      {
+      robotisPort= new Serial( this, "COM4", 57600 );
+      }
+      catch(RuntimeException a)
+      {
+        System.err.println("turn off Roboplus terminal!");
+        System.exit(0);
+      }
+      
+      robotisPort.write(65);
+      delay(50);
+      robotisPort.write(13);
+      return;
+    }
+    void startArduino()
+    {
+      try
+      {
+         arduinoPort = new Serial( this, "COM9", 9600 );
+      }
+      catch(RuntimeException a)
+      {
+        System.err.println("plug in arduino!");
+        System.exit(0);
+      }
+      
+      robotisPort.write(65);
+      delay(50);
+      robotisPort.write(13);
+      return;
+    }
     void keyPressed() {
         output.flush();  // Writes the remaining data to the file
         output.close();  // Finishes the file
