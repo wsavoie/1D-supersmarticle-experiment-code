@@ -1,17 +1,26 @@
-figure(1);
+figure(2);
 hold on;
-file='A:\1DSmartData\ContactData\-pi2_s=1_v=1.txt';
-dat = importdata(file);
+fold='A:\1DSmartData\ContactData\';
+file='s=3_pa=-0.5_pb=0_v=2.txt';
+[~,nums]=parseFileNames(file);
+phase=nums(2)-nums(3);
+
+dat = importdata(fullfile(fold,file));
 ylim([1,7]);
 states=dat(:,1);
 t=dat(:,2);
 % states(diff(states)==0)=[];
-newstate=states;
-for i=1:length(newstates);
-
-end
-stairs(t(t<10),states(t<10));
+% newstate=states;
+% for i=1:length(newstates);
+% 
+% end
+tend=12;
+stairs(t(t<tend),states(t<tend));
+% stairs(t,states);
 figText(gcf,16);
+xlabel('time (s)');
+ylabel('modes');
+title(['\Delta\phi=',num2str(phase),'\pi']);
 %% state transitions
 nonRepStates = states(diff([0; states])~=0);
 stateT=[
