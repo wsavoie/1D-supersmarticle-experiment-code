@@ -11,8 +11,32 @@
   int h=300; int w=640;
   int backCol=51;  
   int bufferOld=1;
-  String name="s=1_pa=-0.5_pb=0_v=1";
+    String phases="";
+  int systemState=0;
+  boolean cont=false;
+  //  printf("49=(0,0) 50=(pi,0),51=(pi/2,0),52=(-pi/2,0)\n");
+  
+  int phase=51;
+  String name="s=3";
+  int version=2;
     void setup() {
+      time=1000;
+      switch(phase){
+      case 49://(0,0)      
+        phases="_pa=0_pb=0_";
+      break;
+      case 50://(pi,0)      
+        phases="_pa=1_pb=0_";
+      break;     
+      case 51://(pi/2,0)   
+        phases="_pa=0.5_pb=0_";
+      break;      
+      case 52://(-pi/2,0)        
+       phases="_pa=-0.5_pb=0_";
+      break;
+      
+      }
+      name=name+phases+"v="+version;
 
       background(backCol);
       surface.setTitle("state visualizer");
@@ -37,9 +61,14 @@
 
        printArray(Serial.list());  
        startRobotis();
+       while(cont)
+       {
+         if(keyPressed)
+           {cont=true;}
+       }
        startArduino();
-         time = millis();//store the current time
-       output = createWriter( "A:\\1DSmartData\\ContactData\\"+name+".txt" );
+         
+
         
   
     }
@@ -59,8 +88,7 @@
          { //<>//
             if(inBuffer!=null)
             {
-              
-              output.println( inBuffer[0]+"\t"+t );
+              System.err.println(inBuffer[0]);
                stroke(backCol); strokeWeight(10);
                 rect(locx[bufferOld-1]-10, locy[bufferOld-1]-10, 190,80);
                  stroke(255,0,0); strokeWeight(2);
@@ -69,6 +97,8 @@
                 //save("A:\\1DSmartData\\contactVid\\"+count+".tga");
                 count++;
             }
+            if(systemState==1){
+            output.println( inBuffer[0]+"\t"+t );}
          }
        }
   }
@@ -84,10 +114,7 @@
         System.err.println("turn off Roboplus terminal!");
         System.exit(0);
       }
-      
-      robotisPort.write(65);
-      delay(50);
-      robotisPort.write(13);
+      robotisPort.write(phase);
       return;
     }
     void startArduino()
@@ -101,14 +128,27 @@
         System.err.println("plug in arduino!");
         System.exit(0);
       }
-      
-      robotisPort.write(65);
-      delay(50);
-      robotisPort.write(13);
+
       return;
     }
     void keyPressed() {
+      
+       if (keyCode == 32 && systemState==0)
+       {
+                output = createWriter( "A:\\1DSmartData\\ContactData\\"+name+".txt" );
+         robotisPort.write(65);
+        delay(1);
+        robotisPort.write(13);
+        systemState=1;
+        time = millis();//store the current time
+        return;
+       }
+       
         output.flush();  // Writes the remaining data to the file
         output.close();  // Finishes the file
+        arduinoPort.clear();
+        arduinoPort.stop();
+        robotisPort.clear();
+        robotisPort.stop();
         exit();  // Stops the program
     }

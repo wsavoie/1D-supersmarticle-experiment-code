@@ -1,6 +1,6 @@
-int con0 = 48; //pc14
-int con1 = 50; //pc13
-int con2 = 52; //pc12
+int con0 = 31; //pc14
+int con1 = 30; //pc13
+int con2 = 32; //pc12
 int val0 = 0;
 int val1 = 0;
 int val2 = 0;
