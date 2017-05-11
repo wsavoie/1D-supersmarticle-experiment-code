@@ -1,9 +1,9 @@
 /*
- * 1D-SS-Servo.c
- *
- * Created: 3/28/2017 10:02:40 AM
- * Author : root
- */ 
+* 1D-SS-Servo.c
+*
+* Created: 3/28/2017 10:02:40 AM
+* Author : root
+*/
 #define __DELAY_BACKWARD_COMPATIBLE__
 #define MAX 1023
 #define CCW 1023
@@ -11,10 +11,10 @@
 
 typedef enum {WHEEL,JOINT, TRUESIN, WHEELRAND,TEST} m;
 static const char *MODE_STRING[] = {"WHEEL", "JOINT", "TRUESIN", "WHEELRAND","TEST"};
-m mode=TRUESIN;	
+m mode=TRUESIN;
 //#define F_CPU 1200000UL
 #define F_CPU 16000000UL
-#define DEFAULT_BAUDNUM 1 
+#define DEFAULT_BAUDNUM 1
 #define NUM_ACTUATOR 2
 #define STEP_THETA			(M_PI / 50.0f) // Large value is more fast
 #define CONTROL_PERIOD		(10) // msec (Large value is more slow)
@@ -79,7 +79,7 @@ int main(void)
 {
 
 	//int centeredPos=488; //478
-	delayTime=200; 
+	delayTime=200;
 	
 	int i;
 	int CommStatus;
@@ -88,7 +88,7 @@ int main(void)
 	//joint = true, wheel = false
 	char str[20];
 	serial_initialize(57600);
-	dxl_initialize( 0, DEFAULT_BAUDNUM ); 
+	dxl_initialize( 0, DEFAULT_BAUDNUM );
 	sei();	// Interrupt Enable
 	
 	printf( "\n\nStarting 1D SuperSmarticle Servo\n\n" );
@@ -99,41 +99,48 @@ int main(void)
 	//true position of center is 150, do everything about that point but I offset in function by 60 degrees so middle = 90 deg
 	//setPositionRad(servoId1,phase[servoId1]);
 	//setPositionRad(servoId2,phase[servoId2]);
-		////rad=rad+M_PI/3;
-		//M_PI/180/0.005061
-			//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
-				printf("Currently running %s mode\n\n",MODE_STRING[mode]);
-				_delay_ms(300);
-				printf( "\n temps:(%d,%d)",dxl_read_word( servoId1, PRESENT_TEMP ), dxl_read_word( servoId2, PRESENT_TEMP ) );
-				printf( "\n phase:(%e,%e)\n",phase[servoId1],phase[servoId2]);
-	firstMove();
-	//dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.29));
-	//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.29));
+	////rad=rad+M_PI/3;
+	//M_PI/180/0.005061
+	//dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos+phase[servoId2]/.005061);
+	printf("Currently running %s mode\n\n",MODE_STRING[mode]);
+	_delay_ms(300);
+	printf( "\n temps:(%d,%d)",dxl_read_word( servoId1, PRESENT_TEMP ), dxl_read_word( servoId2, PRESENT_TEMP ) );
+	printf( "\n phase:(%e,%e)\n",phase[servoId1],phase[servoId2]);
 	
-	_delay_ms(100);
-
-	int switchPhase=0;
+	int switchPhase=1;
+	currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
+	angfreq= 11.7518;
 	if(switchPhase==0)
 	{
-			printf("Press any key then enter to continue:\n\n");
-			scanf("%s", str);
+		//keyboardInputChangePhase();
+		firstMove();
+		_delay_ms(100);
+
+	}
+	else
+	{
+		keyboardInputChangePhase();
+		firstMove();
+		_delay_ms(300);
 	}
 	
+			printf("Press any key then enter to continue:\n\n");
+			scanf("%s", str);
 	switch(mode)
 	{
 		case JOINT: case TRUESIN:
 		{//joint
-			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
-			angfreq= 11.7518;
+
 			//angfreq= 10;
 			
-			if(switchPhase)
-			{
-				keyboardInputChangePhase();
-				dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.293));
-				dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.293));
-				_delay_ms(500);
-			}
+			//if(switchPhase)
+			//{
+				//keyboardInputChangePhase();
+				////dxl_write_word(servoId1, GOAL_POSITION_L, centeredPos[servoId1]+((int)(r2d(phase[servoId1]))%180/0.293));
+				////dxl_write_word(servoId2, GOAL_POSITION_L, centeredPos[servoId2]+((int)(r2d(phase[servoId2]))%180/0.293));
+				//firstMove();
+				//_delay_ms(100);
+			//}
 			break;
 		}
 		case WHEEL: case WHEELRAND:
@@ -141,10 +148,10 @@ int main(void)
 			currentSpeed=CW;
 			setWheelModeAddresses();
 			printf("\n(W,S)= \t(+10,-10)\n(ESC,Q,E) = \t(0,512,1023)\n");
-			printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);	
+			printf("Set speed: S1=%d\tS2=%d\r\n", currentSpeed,currentSpeed);
 			break;
 		}
-	
+		
 		case TEST:
 		{//wheel
 			currentSpeed=1011; //= 11.7518 rad/s   .111 rpm per unit
@@ -152,21 +159,21 @@ int main(void)
 			//float period = 2*M_PI/angfreq;
 			break;
 		}
-    }
-					//printf("Press enter to continue:\n\n");
-					//scanf("%s", str);
+	}
+	//printf("Press enter to continue:\n\n");
+	//scanf("%s", str);
 	
 	
 	//loop
 	while (1)
-	{	
+	{
 		switch(mode)
 		{
 			case WHEEL:
-			{		
+			{
 				///for keyboard update/////
 				//currentSpeed=keyboardInputSpeed(currentSpeed);
-			
+				
 				//for regular update//////
 				//currentSpeed=MAX;
 				
@@ -176,7 +183,7 @@ int main(void)
 				break;
 			}
 			case WHEELRAND:
-			{			
+			{
 				timer++;
 				if (timer>timerSwitch)
 				{
@@ -187,13 +194,13 @@ int main(void)
 				}
 				else
 				{
-				
+					
 					///for keyboard update/////
 					//currentSpeed=keyboardInput(currentSpeed);
-				
+					
 					//for regular update//////
 					currentSpeed=MAX;
-				
+					
 					cs1=currentSpeed; cs2=currentSpeed;
 					dxl_write_word(servoId1, MOVING_SPEED_L, cs1 );
 					dxl_write_word(servoId2, MOVING_SPEED_L, cs2 );
@@ -225,7 +232,7 @@ int main(void)
 					dxl_set_txpacket_parameter(2+3*i, id[i]);
 					//goes between +AmpPos and -AmpPos
 					
-					GoalPos = (int)(AmpPos*sin(angfreq*t+ phase[i]))+centeredPos[i]; 
+					GoalPos = (int)(AmpPos*sin(angfreq*t+ phase[i]))+centeredPos[i];
 					
 					//printf( "%d  ", GoalPos );
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
@@ -272,14 +279,14 @@ int main(void)
 					//https://en.wikipedia.org/wiki/Triangle_wave
 					GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i]))) +centeredPos[i];
 					//printf( "%d  ", GoalPos );
-							//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
-							//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
-							
+					//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
+					//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
+					
 					dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
 					dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
 					
 				}
-			//
+				//
 				//dxl_set_txpacket_parameter(2, id[0]);
 				//GoalPos = (int)(2*AmpPos/M_PI*abs(asin(sin(angfreq*t/2-phase[0]))) +centeredPos[0]);
 				//dxl_set_txpacket_parameter(3, dxl_get_lowbyte(GoalPos));
@@ -336,33 +343,33 @@ int main(void)
 			}
 		}
 		
-}
+	}
 	return 1;
 }
 void firstMove()
 {
-dxl_set_txpacket_id(BROADCAST_ID);
-dxl_set_txpacket_instruction(INST_SYNC_WRITE);
-dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
-dxl_set_txpacket_parameter(1, 2);
-for( int i=0; i<NUM_ACTUATOR; i++ )
-{
-	//-1 to +1 saw tooth wave
-	
-	dxl_set_txpacket_parameter(2+3*i, id[i]);
-	//goes between +AmpPos and -AmpPos
-	//https://en.wikipedia.org/wiki/Triangle_wave
-	GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i]))) +centeredPos[i];
-	//printf( "%d  ", GoalPos );
-	//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
-	//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
-	
-	dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
-	dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
-	
-}
-dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
-dxl_txrx_packet();
+	dxl_set_txpacket_id(BROADCAST_ID);
+	dxl_set_txpacket_instruction(INST_SYNC_WRITE);
+	dxl_set_txpacket_parameter(0, GOAL_POSITION_L);
+	dxl_set_txpacket_parameter(1, 2);
+	for( int i=0; i<NUM_ACTUATOR; i++ )
+	{
+		//-1 to +1 saw tooth wave
+		
+		dxl_set_txpacket_parameter(2+3*i, id[i]);
+		//goes between +AmpPos and -AmpPos
+		//https://en.wikipedia.org/wiki/Triangle_wave
+		GoalPos = (int)(2*AmpPos/M_PI*asin(sin(angfreq*t-phase[i]))) +centeredPos[i];
+		//printf( "%d  ", GoalPos );
+		//dxl_write_word(id[i], GOAL_POSITION_L, GoalPos );
+		//dxl_write_word(servoId2, GOAL_POSITION_L, speed );
+		
+		dxl_set_txpacket_parameter(2+3*i+1, dxl_get_lowbyte(GoalPos));
+		dxl_set_txpacket_parameter(2+3*i+2, dxl_get_highbyte(GoalPos));
+		
+	}
+	dxl_set_txpacket_length((2+1)*NUM_ACTUATOR+4);
+	dxl_txrx_packet();
 
 
 }
@@ -395,7 +402,7 @@ void setWheelModeAddresses()
 	dxl_write_word(servoId2, CCW_COMPLIANCE_SLOPE, 2);
 	dxl_write_word(servoId2, CW_COMPLIANCE_MARGIN, 1);
 	dxl_write_word(servoId2, CCW_COMPLIANCE_MARGIN, 1);
-		
+	
 }
 
 void setJointModeAddresses()
@@ -443,7 +450,7 @@ void setPositionRad(int id, double rad)
 
 //set position of servo in ang
 void setPositionAng(int id, double ang)
-{	
+{
 	ang=ang+150;
 	int add=ang/.29;
 	dxl_write_word(id, GOAL_POSITION_L, add);
@@ -469,41 +476,41 @@ int changeSpeedPercent(int speedIn,int changeAmount,int id)
 //sanitize input value
 int keepWithinBounds(int input,int minB,int maxB)
 {
-		input=input<minB ? minB:input;
-		input=input>maxB ? maxB : input;
-		return input;
+	input=input<minB ? minB:input;
+	input=input>maxB ? maxB : input;
+	return input;
 }
 
 //change speed with keyboard input
 int keyboardInputSpeed(int speed)
-{	
+{
 	unsigned char ReceivedData = getchar();
 	switch(ReceivedData)
 	{
-	case 'w':
+		case 'w':
 		speed=changeSpeedPercent(speed,5,servoId1);
 		changeSpeedPercent(speed,5,servoId2);
-		break;	
-	case 's':
+		break;
+		case 's':
 		speed=changeSpeedPercent(speed,-5,servoId1);
 		changeSpeedPercent(speed,-5,servoId2);
 		break;
-	case 0x1b: //esc
+		case 0x1b: //esc
 		speed=0;
 		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
 		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
-	case 'q':
+		case 'q':
 		speed=MAX/2;
 		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
 		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
-	case 'e':
+		case 'e':
 		speed=MAX;
 		dxl_write_word(servoId1, MOVING_SPEED_L, speed );
 		dxl_write_word(servoId2, MOVING_SPEED_L, speed );
 		break;
-	default:
+		default:
 		speed=speed;
 		break;
 	}
@@ -511,31 +518,35 @@ int keyboardInputSpeed(int speed)
 }
 
 void keyboardInputChangePhase()
-{	
+{
 	//char str[20];
-	printf("1=(0,0) 2=(p,0),3=(p2,0),4=(-p2,0)\n");
+	printf("1=(0,0) 2=(-p,0),3=(p,0),4=(-p/2,0) 5=(p/2,0)\n");
 	unsigned char ReceivedData = getchar();
 	
 	switch(ReceivedData)
 	{
 		case '1':
-			phase[servoId1]=0;
-			phase[servoId2]=0;
+		phase[servoId1]=0;
+		phase[servoId2]=0;
 		break;
 		case '2':
-			phase[servoId1]=M_PI;
-			phase[servoId2]=0;
+		phase[servoId1]=-M_PI;
+		phase[servoId2]=0;
 		break;
 		case '3':
-			phase[servoId1]=M_PI_2;
-			phase[servoId2]=0;
+		phase[servoId1]=M_PI;
+		phase[servoId2]=0;
 		break;
 		case '4':
-			phase[servoId1]=-M_PI_2;
-			phase[servoId2]=0;
+		phase[servoId1]=-M_PI_2;
+		phase[servoId2]=0;
+		break;
+		case '5':
+		phase[servoId1]=M_PI_2;
+		phase[servoId2]=0;
 		break;
 		default:
-			
+		
 		break;
 	}
 	printf("phase=%s",&ReceivedData);

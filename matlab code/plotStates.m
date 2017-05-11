@@ -1,5 +1,5 @@
 % load('states.mat');
-phase='\pi/2';
+phase='\phi_{offset}=-\pi/2 ';
 nPeriods=29;
 figure(1);
 hold on;
@@ -10,7 +10,7 @@ for(i=1:nPeriods)
 rectangle('position',[state(i)-0.5,framei(i),1,framef(i)-framei(i)],'facecolor',cols(state(i),:))
 end
 % plot(state(1:nPeriods),framei(1:nPeriods),'k','linewidth',2);
-xlabel('state');
+xlabel('mode');
 ylabel('frames');
 title(phase);
 figText(gcf,18);
@@ -24,7 +24,7 @@ rectangle('position',[framei(i),state(i)-0.5,framef(i)-framei(i),1],'facecolor',
 end
 % plot(framei(1:nPeriods),state(1:nPeriods),'k','linewidth',2);
 xlabel('frames');
-ylabel('state');
+ylabel('mode');
 title(phase);
 figText(gcf,18);
 

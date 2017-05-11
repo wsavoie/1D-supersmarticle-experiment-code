@@ -21,21 +21,21 @@ fullfile(fold,'movieInfo.mat')
 %* 6. plot speed of frame vs speed smart b
 %* 7. distance per cycle
 %* 8. plot drift speed vs mode (wheel mode displacement)
-%* 9.
+%* 9. plot drift speed vs mode (joint mode)
 %*10.
 %*11.
 %*12. 
 %*13/14 plot yoke rotation for both smarticles
 %************************************************************
-showFigs=[1 14];
+showFigs=[1 3 9];
 
 %define curve params [] for all
-state=[]; phase1=[]; phase2=[]; v=[]; m=[]; f=[];
+mode=[1]; phase1=[]; phase2=[]; v=[]; m=[]; f=[];
 %state=10 is for testing
 
 
 
-props={state phase1 phase2 v};
+props={mode phase1 phase2 v};
 % props={state phase1 phase2 v m};
 % props={state phase1 phase2 v m f};
 inds=1;
@@ -65,11 +65,11 @@ pars=[usedMovs(:).pars];
 
 
 if length(props)==4
-    props={state phase1 phase2 v};
+    props={mode phase1 phase2 v};
 elseif length(props)==5
-    props={state phase1 phase2 v m};
+    props={mode phase1 phase2 v m};
 elseif length(props)==6
-    props={state phase1 phase2 v m f};
+    props={mode phase1 phase2 v m f};
 end
 pars=reshape(pars,[length(props),numel(pars)/length(props)])';
 N=length(usedMovs);
@@ -127,6 +127,7 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     xlim([-1.1,1.1]);
+    plot([-1.1,1.1],[0,0],'r','linewidth',2);
     uniPhase=unique(pars(:,2)-pars(:,3));
     drifts=cell(length(uniPhase),1);
     for j=1:length(uniPhase)
@@ -143,8 +144,8 @@ if(showFigs(showFigs==xx))
     driftMean=cellfun(@mean,drifts)
     errorbar(uniPhase,cellfun(@mean,drifts),cellfun(@std,drifts),'k')
     figText(gcf,16);
-    axis equal
-    xlabel('(\phi_1-\phi_2)/(\pi)');
+%     axis equal
+    xlabel('\Delta\phi (\pi)');
     ylabel('drift speed (mm/s)');
     
 end
@@ -280,11 +281,39 @@ if(showFigs(showFigs==xx))
     ylabel('drift speed (mm/s)');
     
 end
-%% 9
+%% 9 plot drift speed vs mode (joint mode)
 xx=9;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
+%         xmin=-2.1; xmax=2.1;
+    xlim([0.8,7.2]);
+    
+    unimode=unique(pars(:,1));
+    drifts=cell(length(unimode),1);
+    
+    for j=1:length(unimode)
+        for i=1:length(usedMovs)
+            movMode =(usedMovs(i).pars(1));
+            if movMode==unimode(j)
+                %                 t=find(usedMovs(i).t>3.0,1);
+                t=1;
+                
+                drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(t,2))/...
+                    usedMovs(i).t(end);
+                drifts{j}=[drifts{j} drift];
+            end
+        end
+        plot(ones(length(drifts{j}),1)*unimode(j),[drifts{j}],'o')
+    end
+    driftMean=cellfun(@mean,drifts);
+    errorbar(unimode,cellfun(@mean,drifts),cellfun(@std,drifts),'k')
+%     plot([xmin,xmax],[0,0],'r','linewidth',1.2);
+    figText(gcf,16);
+    %     axis equal
+    xlabel('mode');
+    ylabel('drift speed (mm/s)');
+    set(gca,'xticklabel',[{'1','2','3','4','5','6','7'}'])
 end
 %% 10
 xx=10;
@@ -307,71 +336,84 @@ if(showFigs(showFigs==xx))
 end
 
 %% 13 plot yoke rotation for both smarticles
-xx=[13,14];
-if(showFigs(showFigs==xx))
-    figure(xx(1));
-    hold on;
-    x=5;
-    t=(usedMovs(x).t<5);
-    %         rotdisa=sum(sqrt(diff(usedMovs(1).rots(t,1)).^2+diff(usedMovs(1).rots(t,3)).^2))
-    %         rotdisb=sum(sqrt(diff(usedMovs(1).rots(t,2)).^2+diff(usedMovs(1).rots(t,4)).^2))
-    %         dx=diff(usedMovs(1).rots(t,1));
-    %         dy=diff(usedMovs(1).rots(t,3));
-    %         int = 1+(dy./dx).^2;
-    %         len=sum(int.*dx);
-    sx=usedMovs(x).smarts(t,1:2);
-    sy=usedMovs(x).smarts(t,3:4);
-    rx=usedMovs(x).rots(t,1:2);
-    ry=usedMovs(x).rots(t,3:4);
-    rz=zeros(size(ry));
-    
-    %center smarticle position and rotation
-    sx=bsxfun(@minus,sx,sx(1,:));
-    sy=bsxfun(@minus,sy,sy(1,:));
-    rx=bsxfun(@minus,rx,rx(1,:));
-    ry=bsxfun(@minus,ry,ry(1,:));
-    %remove effect of smarticle displacement from rotation track
-    newrx=rx-sx; 
-    newry=ry-sy;
-    
-    %center around zero
-    newrx=bsxfun(@minus,newrx,min((newrx)));
-    newry=bsxfun(@minus,newry,min((newry)));
-    newry=bsxfun(@minus,newry,max(abs(newry)/2));
-    
-    %scale the output
-    newrx=bsxfun(@rdivide,newrx,max(abs(newrx)));
-    newry=bsxfun(@rdivide,newry,max(abs(newry)));
-    
-    %code used to rotate the rx and ry
-%     zz=[newrx(:,1)'; newry(:,1)'];
-%     rot=4*pi/180;
-%     r=[cos(rot) -sin(rot); sin(rot) cos(rot)]
-%     zz=(r*zz)';
-%        plot(zz(:,1),zz(:,2),'k'); 
-
-    plot(newrx(:,1),newry(:,1));
-    plot(newrx(:,2),newry(:,2));
-    plot(newrx(1,1),newry(1,1),'ko');
-     plot(newrx(1,2),newry(1,2),'k^');
-%     plot(rx1,newry(:,2));
-%     plot(rx2,newry(:,2));
-    axis tight
-    axis equal
-    figText(gcf,16); 
-    title('yoke trajectory');
-    xlabel('x (normalized)'); ylabel('y (normalized)');
-    
-    figure(xx(2));
-    hold on;
-    phi=atan2(newry,newrx);
-%     plot(rad2deg(phi))
-    plot(sin(phi));
-    figText(gcf,16); 
-    xlabel('frame'); ylabel('\theta');
-    legend({'smarticle 1','smarticle 2'})
-    
-end
+% xx=[13,14];
+% if( showFigs(showFigs==xx(1)) || showFigs(showFigs==xx(2)) )
+%     figure(xx(1));
+%     hold on;
+%     x=7;
+%     t=(usedMovs(x).t<2);
+%     %         rotdisa=sum(sqrt(diff(usedMovs(1).rots(t,1)).^2+diff(usedMovs(1).rots(t,3)).^2))
+%     %         rotdisb=sum(sqrt(diff(usedMovs(1).rots(t,2)).^2+diff(usedMovs(1).rots(t,4)).^2))
+%     %         dx=diff(usedMovs(1).rots(t,1));
+%     %         dy=diff(usedMovs(1).rots(t,3));
+%     %         int = 1+(dy./dx).^2;
+%     %         len=sum(int.*dx);
+%     sx=usedMovs(x).smarts(t,1:2);
+%     sy=usedMovs(x).smarts(t,3:4);
+%     rx=usedMovs(x).rots(t,1:2);
+%     ry=usedMovs(x).rots(t,3:4);
+%     rz=zeros(size(ry));
+%     
+%     %center smarticle position and rotation
+%     sx=bsxfun(@minus,sx,sx(1,:));
+%     sy=bsxfun(@minus,sy,sy(1,:));
+%     rx=bsxfun(@minus,rx,rx(1,:));
+%     ry=bsxfun(@minus,ry,ry(1,:));
+%     %remove effect of smarticle displacement from rotation track
+%     newrx=rx-sx; 
+%     newry=ry-sy;
+%     
+% 
+%     
+%     %center around zero
+%     newrx=bsxfun(@minus,newrx,min((newrx)));
+%     newry=bsxfun(@minus,newry,min((newry)));
+%     newry=bsxfun(@minus,newry,max(abs(newry)/2));
+%   
+%     nonnormrx=newrx;
+%     nonnormry=newry;
+%     
+%     %scale the output
+%     newrx=bsxfun(@rdivide,newrx,max(abs(newrx)));
+%     newry=bsxfun(@rdivide,newry,max(abs(newry)));
+%     
+%     %code used to rotate the rx and ry
+% %     zz=[newrx(:,1)'; newry(:,1)'];
+% %     rot=4*pi/180;
+% %     r=[cos(rot) -sin(rot); sin(rot) cos(rot)]
+% %     zz=(r*zz)';
+% %        plot(zz(:,1),zz(:,2),'k'); 
+% 
+%     plot(newrx(:,1),newry(:,1));
+%     plot(newrx(:,2),newry(:,2));
+%     plot(newrx(1,1),newry(1,1),'ko');
+%      plot(newrx(1,2),newry(1,2),'k^');
+% %     plot(rx1,newry(:,2));
+% %     plot(rx2,newry(:,2));
+%     axis tight
+%     axis equal
+%     figText(gcf,16); 
+%     title('yoke trajectory');
+%     xlabel('x (normalized)'); ylabel('y (normalized)');
+%     
+%     figure(xx(2));
+%     hold on;
+%     phi=atan2(newry,newrx);
+% %     plot(rad2deg(phi))
+%     plot(sin(phi));
+%     figText(gcf,16); 
+%     xlabel('frame'); ylabel('\theta');
+%     legend({'smarticle 1','smarticle 2'})
+%     
+%     figure(15);
+%     hold on;
+%     axis equal;
+% %     axis square;
+%     hold on;
+%     plot(nonnormrx(:,1),nonnormry(:,1));
+%     plot(nonnormrx(:,2),nonnormry(:,2));
+% 
+% end
 %% 15 
 xx=15;
 if(showFigs(showFigs==xx))

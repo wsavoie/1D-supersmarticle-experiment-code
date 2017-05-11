@@ -14,29 +14,32 @@
     String phases="";
   int systemState=0;
   boolean cont=false;
-  //  printf("49=(0,0) 50=(pi,0),51=(pi/2,0),52=(-pi/2,0)\n");
+  //  printf("49=(0,0) 50=(-pi,0),51=(pi,0),52=(-pi/2,0),53=(pi/2,0)\n");
   
-  int phase=51;
-  String name="s=3";
-  int version=2;
+  int phase=        52;
+  String name=     "s=7";
+  String version=  "v=55";
     void setup() {
       time=1000;
       switch(phase){
       case 49://(0,0)      
         phases="_pa=0_pb=0_";
       break;
-      case 50://(pi,0)      
+      case 50://(-pi,0)      
+        phases="_pa=-1_pb=0_";
+      break;
+      case 51://(pi,0)      
         phases="_pa=1_pb=0_";
-      break;     
-      case 51://(pi/2,0)   
-        phases="_pa=0.5_pb=0_";
+      break;   
+      case 52://(-pi/2,0)   
+        phases="_pa=-0.5_pb=0_";
       break;      
-      case 52://(-pi/2,0)        
-       phases="_pa=-0.5_pb=0_";
+      case 53://(pi/2,0)        
+       phases="_pa=0.5_pb=0_";
       break;
       
       }
-      name=name+phases+"v="+version;
+      name=name+phases+version;
 
       background(backCol);
       surface.setTitle("state visualizer");
@@ -77,25 +80,25 @@
        noFill();
        
       strokeWeight(2);
-      int count = 0;
+      //int count = 0;
        while (arduinoPort.available() > 0) 
        {
          
-         inBuffer = arduinoPort.readBytes();
+         inBuffer =  arduinoPort.readBytes();
           t=(millis()-time)/1000.0;
           //system doesn't properly store first .1 seconds in file
-          if(t>.1)
+          if(t>0)
          { //<>//
             if(inBuffer!=null)
             {
-              System.err.println(inBuffer[0]);
+              //System.err.println(inBuffer[0]);
                stroke(backCol); strokeWeight(10);
                 rect(locx[bufferOld-1]-10, locy[bufferOld-1]-10, 190,80);
                  stroke(255,0,0); strokeWeight(2);
                  bufferOld=inBuffer[0];
                 rect(locx[inBuffer[0]-1]-10, locy[inBuffer[0]-1]-10, 190,80);
                 //save("A:\\1DSmartData\\contactVid\\"+count+".tga");
-                count++;
+                //count++;
             }
             if(systemState==1){
             output.println( inBuffer[0]+"\t"+t );}

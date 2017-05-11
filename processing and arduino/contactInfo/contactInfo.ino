@@ -1,6 +1,6 @@
-int con0 = 31; //pc14
-int con1 = 30; //pc13
-int con2 = 32; //pc12
+int con0 = 31;
+int con1 = 30;
+int con2 = 32; 
 int val0 = 0;
 int val1 = 0;
 int val2 = 0;
@@ -27,34 +27,34 @@ void loop() {
 // boolean p12=!!(PIOD->PIO_PDSR & (1<<8)); //read pin 12
 
 
-val0 = digitalRead(con0)*100;   // read the input pin
-val1 = digitalRead(con1)*10;   // read the input pin
-val2 = digitalRead(con2)*1;   // read the input pin
+val0 = (!digitalRead(con0))*100;   // read the input pin
+val1 = (!digitalRead(con1))*10;   // read the input pin
+val2 = (!digitalRead(con2))*1;   // read the input pin
 
 fVal=val0+val1+val2;
-// Serial.println(fVal);
+
 //0 means contact
 switch(fVal)
 {
-	case 1://state 1
+	case 110://state 1
 		Serial.write(1);
 		break;
-	case 11://state 2
+	case 100://state 2
 		Serial.write(2);
 		break;
-	case 100://state 3
+	case 11://state 3
 		Serial.write(3);
 		break;
-	case 110://state 4
+	case 1://state 4
 		Serial.write(4);
 		break;
-	case 101://state 5
+	case 10://state 5
 		Serial.write(5);
 		break;
-	case 111://state 6
+	case 0://state 6
 		Serial.write(6);
 		break;
-	case 10://state 7
+	case 101://state 7
 		Serial.write(7);
 		break;
 	default:
