@@ -23,8 +23,8 @@ axis equal
 axis([-20,20,-20,20]);
 
 oCirc=circle2(gait(i,1),gait(i,2),oR,oC);
-vert=rectangle('Position',[-0.5,gait(i,2)-2.25*iR,1, iR*4.5],'FaceColor',iC);
-horz=rectangle('Position',[-2.25*iR+gait(i,1),-0.5, iR*4.5, 1],'FaceColor',iC);
+vert=rectangle('Position',[-0.5,gait(i,2)-2.5*iR,1, iR*5],'FaceColor',iC);
+horz=rectangle('Position',[-2.5*iR+gait(i,1),-0.5, iR*5, 1],'FaceColor',iC);
 iCirc=circle2(0,0,iR,iC);
 f=getframe;
 writeVideo(v,f);
