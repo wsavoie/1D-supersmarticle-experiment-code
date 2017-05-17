@@ -1,1 +1,7 @@
 *.asv
+*.xml
+IncFile1.h
+*.mp4
+*.cproj
+Debug/
+Release/
