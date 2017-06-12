@@ -520,7 +520,7 @@ int keyboardInputSpeed(int speed)
 void keyboardInputChangePhase()
 {
 	//char str[20];
-	printf("1=(0,0) 2=(-p,0),3=(p,0),4=(-p/2,0) 5=(p/2,0)\n");
+	printf("1=(0,0) 2=(-p,0),3=(p,0),4=(-p/2,0) 5=(p/2,0) 6=(-3p/4,0) 7=(-p/4,0) 8=(p/4,0) 9=(3p/4,0) \n");
 	unsigned char ReceivedData = getchar();
 	
 	switch(ReceivedData)
@@ -545,6 +545,23 @@ void keyboardInputChangePhase()
 		phase[servoId1]=M_PI_2;
 		phase[servoId2]=0;
 		break;
+		case '6':
+		phase[servoId1]=-3*M_PI/4;
+		phase[servoId2]=0;
+		break;
+		case '7':
+		phase[servoId1]=-M_PI/4;
+		phase[servoId2]=0;
+		break;
+		case '8':
+		phase[servoId1]=M_PI/4;
+		phase[servoId2]=0;
+		break;
+		case '9':
+		phase[servoId1]=3*M_PI/4;
+		phase[servoId2]=0;
+		break;		
+		
 		default:
 		
 		break;

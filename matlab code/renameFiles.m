@@ -1,10 +1,10 @@
 % fold=uigetdir('A:\1DSmartData\Optitrack\');
-fold=uigetdir('A:\1DSmartData\Optitrack\Session 2017-05-05');
+fold=uigetdir('A:\2DSmartData\Session 2017-06-06');
 % A:\1DSmartData\Optitrack\Session 2017-04-24\inactive
 f=dir2(fullfile(fold,'*.csv'));
 % [~,num]=parseFileNames(fold)
 nMovs=length(f);
-s=7; pa=-0.5; pb=0; m=0; foam=0;
+s=1; pa=1; pb=0; m=0; foam=0;
 % m=0 is joint
 % m=1 is wheel ccw for smart a
 % m=2 is wheel cw for smart a

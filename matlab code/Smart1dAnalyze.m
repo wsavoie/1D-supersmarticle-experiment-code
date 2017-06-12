@@ -27,7 +27,7 @@ fullfile(fold,'movieInfo.mat')
 %*12. 
 %*13/14 plot yoke rotation for both smarticles
 %************************************************************
-showFigs=[1 3 9];
+showFigs=[1 2 3 9];
 
 %define curve params [] for all
 mode=[1]; phase1=[]; phase2=[]; v=[]; m=[]; f=[];
@@ -134,7 +134,9 @@ if(showFigs(showFigs==xx))
         for i=1:length(usedMovs)
             movPhase= -diff(usedMovs(i).pars(2:3));
             if movPhase==uniPhase(j)
-                drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(1,2))/...
+%                 drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(1,2))/...
+%                     usedMovs(i).t(end);
+                   drift=(usedMovs(i).frame(end,2)-usedMovs(i).frame(1,2))/...
                     usedMovs(i).t(end);
                 drifts{j}=[drifts{j} drift];
             end
