@@ -144,7 +144,7 @@ if(showFigs(showFigs==xx))
         plot(ones(length(drifts{j}),1)*uniPhase(j),[drifts{j}],'o')
     end
     driftMean=cellfun(@mean,drifts)
-    errorbar(uniPhase,cellfun(@mean,drifts),cellfun(@std,drifts),'k')
+    errorbar(uniPhase,cellfun(@mean,drifts),cellfun(@std,drifts),'k','linewidth',2)
     figText(gcf,16);
 %     axis equal
     xlabel('\Delta\phi (\pi)');
